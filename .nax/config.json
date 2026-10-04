@@ -9,6 +9,12 @@
   },
   "review": {
     "enabled": true,
-    "checks": ["typecheck", "semantic"]
+    "checks": [
+      "typecheck",
+      "semantic"
+    ]
+  },
+  "finish": {
+    "enabled": true
   }
 }
