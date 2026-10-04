@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "name": "koda-fleet-sandbox",
+  "quality": {
+    "commands": {
+      "test": "bun test",
+      "typecheck": "bun run typecheck"
+    }
+  },
+  "review": {
+    "enabled": true,
+    "checks": ["typecheck", "semantic"]
+  }
+}

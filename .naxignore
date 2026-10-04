@@ -1,0 +1,15 @@
+# nax - paths excluded from context, review
+# and verification scanning.
+# gitignore syntax. Also honoured per-package.
+
+.nax/
+dist/
+build/
+coverage/
+node_modules/
+
+# Uncomment what applies to this repo:
+# examples/
+# fixtures/
+# vendor/
+# *.generated.*
