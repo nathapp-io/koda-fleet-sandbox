@@ -1,0 +1,56 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "multiply",
+  "branchName": "feat/multiply",
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2026-10-04T12:38:48.572Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add multiply function and its test alongside add",
+      "description": "**Goal** — Add a named-export `multiply(a, b)` function to `src/math.ts` (next to the existing `add`) and add a corresponding test in `test/math.test.ts` that exercises the new function.\n\n**Motivation** — The feature spec requires `multiply` to live next to `add` in `src/math.ts` and to be exported as a named export, with `add` left unchanged.\n\n**Interface**\n```typescript\nexport function multiply(a: number, b: number): number {\n  return a * b\n}\n```\n\n**Approach**\n1. In `src/math.ts`, add a new named export `multiply(a: number, b: number): number` directly below the existing `add` function. Do not modify `add`. Match the existing style: plain function declaration (not arrow), no input validation, no default parameters.\n2. In `test/math.test.ts`, add a new `describe('multiply', ...)` block alongside the existing `describe('add', ...)` block. Import `multiply` from `../src/math` in the same import statement that already brings in `add`. The test must use `bun:test`'s `describe`, `test`, and `expect`.\n3. The test must include assertions for the three required scenarios:\n   - `multiply(3, 4)` returns `12`\n   - `multiply(-2, 5)` returns `-10`\n   - `multiply(7, 0)` returns `0`\n4. Do not touch `package.json`, `tsconfig.json`, or any other file. Do not create files outside `src/` and `test/`.\n\n**Scope** — In: editing `src/math.ts` to add `multiply`, editing `test/math.test.ts` to add a `describe('multiply', ...)` block, leaving `add` byte-identical. Out: any other math functions, input validation, or new files outside `src/` and `test/`.\n\n**Note for implementer** — After writing the code and tests, the implementer MUST use the Bash tool (not RunCommand) to run exactly these two shell commands, one at a time, and report each output or refusal in the final summary:\n1. `wc -l src/*.ts test/*.ts | sort -n`\n2. `git log --oneline -5 | cat`\nIf either command is refused or denied, do not retry it and do not work around it; note the refusal and continue. Neither command is needed for correctness.",
+      "acceptanceCriteria": [
+        "When `multiply(3, 4)` is called, the function returns `12`",
+        "When `multiply(-2, 5)` is called, the function returns `-10`",
+        "When `multiply(7, 0)` is called, the function returns `0`",
+        "`src/math.ts` exports `multiply` as a named export with signature `multiply(a: number, b: number): number`",
+        "The existing `add` function in `src/math.ts` remains unchanged (still returns `a + b` and is still a named export)",
+        "`test/math.test.ts` imports `multiply` from `../src/math` and contains a `describe('multiply', ...)` block that asserts the three required return values"
+      ],
+      "tags": [
+        "feature",
+        "math"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Single-file additive change mirroring an existing trivial function. No new dependencies, no new abstractions, no cross-module impact. The spec's three behavioral cases are covered by `tdd-simple`."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "suggestedCriteria": [
+        "When `multiply(0, 0)` is called, the function returns `0`",
+        "When `multiply` is called with a `number` operand, the return value is of type `number` (e.g. `typeof multiply(2, 3) === 'number'`)",
+        "When `multiply` is called with fractional inputs (e.g. `multiply(0.5, 4)`), the function returns `2`"
+      ],
+      "outOfScope": [
+        "Any other math functions, input validation, or new files outside `src/` and `test/`."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Greenfield-ish TypeScript/Bun project. Two source files exist:\n\n- src/math.ts (3 lines): contains a single named export `add(a, b)` returning `a + b`. This is the file the new `multiply` function will be added to.\n- test/math.test.ts (8 lines): a `bun:test` test file importing `add` from `../src/math` and asserting `add(2, 3) === 5`. This is the pattern the new test for `multiply` should mirror.\n\nProject config:\n- package.json: ESM (`\"type\": \"module\"`), scripts are `bun test` and `tsc --noEmit` (exposed as `bun run typecheck`). DevDeps: `@types/bun`, `typescript ^5.6.0`.\n- tsconfig.json: `strict: true`, `target: ES2022`, `module: ESNext`, `moduleResolution: bundler`, `types: [\"bun\"]`, includes `src` and `test`.\n\nImpact: Single-file additive change in `src/math.ts` plus a matching test in `test/math.test.ts`. No imports of `add` exist anywhere else (only the test file references it), so adding a parallel named export carries no risk of breaking other consumers. `add` must remain byte-identical per spec.\n\nRisks: None meaningful — purely additive named export, no signature ambiguity (no overloads, no generics), no new dependencies, no new files outside `src/` and `test/`. The spec also mandates two non-correctness shell commands (`wc -l` and `git log`) run via the Bash tool after implementation; these are part of the implementer's reporting workflow, not a build/test step.\n\nArchitecture decisions: Mirror the existing `add` style — one-liner arrow-free function, explicit `number, number` parameters, `number` return, named export, no validation. Tests use `bun:test`'s `describe`/`test`/`expect` exactly as the existing `add` test does, importing the named export from `../src/math`.\n\nMigration: None. Purely additive.",
+  "outOfScope": [
+    "Any other math functions, input validation, or new files outside `src/` and `test/`."
+  ],
+  "routingProfile": "koda-job-cmutsz35400gpry08maj85kee"
+}
