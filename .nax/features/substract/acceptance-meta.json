@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-10-04T11:59:21.347Z",
+  "acFingerprint": "sha256:f34aa754deb6ce17780a8414172a952cf46d7c56fab96e76eac75011c720de36",
+  "layoutFingerprint": "sha256:9dcb1d01a100680666628ae6e292eaf7bd673c40a5ecee07610d1a708de995e0",
+  "storyCount": 1,
+  "acCount": 5,
+  "generator": "nax",
+  "coverage": [
+    {
+      "testPath": ".nax/features/substract/.nax-acceptance.test.ts",
+      "expected": 5,
+      "found": 0,
+      "missing": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5"
+      ]
+    }
+  ]
+}
