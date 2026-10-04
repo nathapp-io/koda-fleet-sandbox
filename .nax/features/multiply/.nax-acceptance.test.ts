@@ -4,19 +4,19 @@ import { resolve } from 'node:path'
 
 // AC-1: assert(multiply(3, 4) === 12)
 test('AC-1: multiply(3, 4) returns 12', async () => {
-  const { multiply } = await import('../src/math')
+  const { multiply } = await import('../../../src/math')
   expect(multiply(3, 4)).toBe(12)
 })
 
 // AC-2: assert(multiply(-2, 5) === -10)
 test('AC-2: multiply(-2, 5) returns -10', async () => {
-  const { multiply } = await import('../src/math')
+  const { multiply } = await import('../../../src/math')
   expect(multiply(-2, 5)).toBe(-10)
 })
 
-// AC-3: assert(multiply(7, 0) === 0)
+// AC-3: assert(multiply(7, 0) returns 0)
 test('AC-3: multiply(7, 0) returns 0', async () => {
-  const { multiply } = await import('../src/math')
+  const { multiply } = await import('../../../src/math')
   expect(multiply(7, 0)).toBe(0)
 })
 
@@ -24,8 +24,8 @@ test('AC-3: multiply(7, 0) returns 0', async () => {
 test('AC-4: src/math.ts exports multiply function with correct signature', () => {
   const content = readFileSync(resolve('src/math.ts'), 'utf-8')
   expect(content).toContain('export function multiply(a: number, b: number): number')
-  // Verify multiply is exported as a named export
-  expect(content).toMatch(/export\s+\{\s*[^}]*\bmultiply\b[^}]*\}/)
+  // Verify multiply is exported as a named export (either via direct function declaration or via an export {...} block)
+  expect(content).toMatch(/(export\s+function\s+multiply\b|export\s+\{\s*[^}]*\bmultiply\b[^}]*\})/)
 })
 
 // AC-5: File src/math.ts contains 'export function add(a: number, b: number): number' and does not contain modifications to the add function body
