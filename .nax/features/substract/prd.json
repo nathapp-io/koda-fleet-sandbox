@@ -3,7 +3,7 @@
   "feature": "substract",
   "branchName": "feat/substract",
   "createdAt": "2026-01-15T00:00:00.000Z",
-  "updatedAt": "2026-10-04T11:59:34.261Z",
+  "updatedAt": "2026-10-04T12:02:54.156Z",
   "userStories": [
     {
       "id": "US-001",
@@ -14,15 +14,17 @@
         "When `subtract(3, 5)` is called, then it returns `-2`.",
         "When `subtract(0, 0)` is called, then it returns `0`.",
         "`src/math.ts` exports `subtract` as a named export in addition to the existing named export `add`, with `add`'s signature and body unchanged.",
-        "`test/math.test.ts` imports `subtract` from `'../src/math'` and exercises it via a `describe('subtract', ...)` block, with the existing `describe('add', ...)` block and its assertions unchanged."
+        "`test/math.test.ts` imports `subtract` from `'../src/math'` and exercises it via a `describe('subtract', ...)` block, with the existing `describe('add', ...)` block and its assertions unchanged.",
+        "When `subtract(a, 0)` is called with any numeric `a`, then it returns `a`.",
+        "When `subtract(a, a)` is called with equal numeric arguments, then it returns `0`."
       ],
       "tags": [
         "feature",
         "math"
       ],
       "dependencies": [],
-      "status": "pending",
-      "passes": false,
+      "status": "passed",
+      "passes": true,
       "attempts": 0,
       "escalations": [],
       "routing": {
@@ -38,10 +40,6 @@
         "test/math.test.ts",
         "package.json",
         "tsconfig.json"
-      ],
-      "suggestedCriteria": [
-        "When `subtract(a, 0)` is called with any numeric `a`, then it returns `a`.",
-        "When `subtract(a, a)` is called with equal numeric arguments, then it returns `0`."
       ],
       "workdirSource": "defaulted",
       "priorErrors": [],
