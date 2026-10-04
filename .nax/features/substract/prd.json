@@ -3,7 +3,7 @@
   "feature": "substract",
   "branchName": "feat/substract",
   "createdAt": "2026-01-15T00:00:00.000Z",
-  "updatedAt": "2026-10-04T11:57:34.348Z",
+  "updatedAt": "2026-10-04T11:59:34.261Z",
   "userStories": [
     {
       "id": "US-001",
@@ -28,7 +28,10 @@
       "routing": {
         "complexity": "simple",
         "testStrategy": "tdd-simple",
-        "reasoning": "Single-file additive change (src/math.ts) plus a parallel test block in the existing test file. No new abstractions, no new dependencies, mirrors an already-established one-function-per-file pattern. Trivial complexity; bun:test is already configured."
+        "reasoning": "Single-file additive change (src/math.ts) plus a parallel test block in the existing test file. No new abstractions, no new dependencies, mirrors an already-established one-function-per-file pattern. Trivial complexity; bun:test is already configured.",
+        "initialComplexity": "simple",
+        "modelTier": "fast",
+        "initialModelTier": "fast"
       },
       "contextFiles": [
         "src/math.ts",
@@ -40,13 +43,14 @@
         "When `subtract(a, 0)` is called with any numeric `a`, then it returns `a`.",
         "When `subtract(a, a)` is called with equal numeric arguments, then it returns `0`."
       ],
+      "workdirSource": "defaulted",
+      "priorErrors": [],
+      "priorFailures": [],
+      "storyPoints": 1,
+      "storyGitRef": "d740e445383baea57a504e27ac14ad2b86228194",
       "outOfScope": [
-        "Any other math functions",
-        "Input validation",
-        "New files outside src/ and test/",
         "Modifying the `add` function or its existing tests"
-      ],
-      "workdirSource": "defaulted"
+      ]
     }
   ],
   "analysis": "Minimal TypeScript repo using bun:test. Single source file `src/math.ts` currently exports only `add(a: number, b: number): number` (src/math.ts:1). Single test file `test/math.test.ts` covers `add` via bun:test (test/math.test.ts:1). Tooling: `bun test` runs tests, `tsc --noEmit` is wired up via `bun run typecheck` (package.json:6-7). tsconfig is strict with `types: [\"bun\"]`, ES2022 target, bundler module resolution (tsconfig.json:1-11).\n\nImpact: only `src/math.ts` is modified. `add` must remain unchanged. `test/math.test.ts` will gain a `describe('subtract', ...)` block mirroring the existing pattern — it imports from `'../src/math'`, so once `subtract` is exported the test can import it the same way without any module-level changes.\n\nRisks: extremely low. Purely additive change to a single file, no new dependencies, no API surface change for existing consumers, no breaking changes. `add`'s signature and behaviour are regression anchors. No migration needed.\n\nArchitecture decisions: mirror the existing pattern — a single named `export function`, no default export, no wrapper module. Follow bun:test conventions used in the existing file (describe/test/expect). Keep the diff minimal so reviewers can confirm `add` is byte-identical except where `subtract` is added.",
