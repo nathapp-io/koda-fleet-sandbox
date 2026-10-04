@@ -16,5 +16,14 @@
   },
   "finish": {
     "enabled": true
+  },
+  "execution": {
+    "permissions": {
+      "run": {
+        "allow": [
+          "Bash(bun test*)"
+        ]
+      }
+    }
   }
 }
