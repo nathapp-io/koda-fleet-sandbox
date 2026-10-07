@@ -3,7 +3,7 @@
   "feature": "sb-1-add-negate-n-to-math",
   "branchName": "feat/sb-1-add-negate-n-to-math",
   "createdAt": "2026-01-01T00:00:00.000Z",
-  "updatedAt": "2026-10-07T02:44:29.769Z",
+  "updatedAt": "2026-10-07T02:46:56.943Z",
   "userStories": [
     {
       "id": "US-001",
@@ -13,15 +13,17 @@
         "When negate(5) is called, it returns -5",
         "When negate(-3) is called, it returns 3",
         "When negate(0) is called, Object.is(negate(0), 0) is true (preserving canonical positive zero)",
-        "add(a: number, b: number) remains unchanged — its body still returns a + b for any numeric inputs (e.g. add(2, 3) still returns 5)"
+        "add(a: number, b: number) remains unchanged — its body still returns a + b for any numeric inputs (e.g. add(2, 3) still returns 5)",
+        "When negate(0.5) is called, it returns -0.5",
+        "negate is importable via `import { negate } from '../src/math'` alongside the existing `add` export"
       ],
       "tags": [
         "feature",
         "math"
       ],
       "dependencies": [],
-      "status": "pending",
-      "passes": false,
+      "status": "passed",
+      "passes": true,
       "attempts": 0,
       "escalations": [],
       "routing": {
@@ -35,10 +37,6 @@
       "contextFiles": [
         "src/math.ts",
         "test/math.test.ts"
-      ],
-      "suggestedCriteria": [
-        "When negate(0.5) is called, it returns -0.5",
-        "negate is importable via `import { negate } from '../src/math'` alongside the existing `add` export"
       ],
       "workdirSource": "defaulted",
       "priorErrors": [],
