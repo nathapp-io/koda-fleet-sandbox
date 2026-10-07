@@ -1,0 +1,57 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "sb-1-add-negate-n-to-math",
+  "branchName": "feat/sb-1-add-negate-n-to-math",
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-10-07T02:40:50.822Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add negate(n) export and tests in test/math.test.ts",
+      "description": "**Goal** — Add a `negate(n)` named export to `src/math.ts` next to the existing `add`, and add bun:test coverage in `test/math.test.ts` covering positive, negative, and the `0`/`-0` edge case.\n\n**Motivation** — The spec requires a `negate` function coexisting with `add` in the math module, with the special-case behaviour that `negate(0)` returns `0` (not `-0`), so downstream math code can rely on a canonical zero.\n\n**Interface**\n```typescript\nexport function negate(n: number): number\n```\n- Returns `-n` for any non-zero numeric input.\n- Returns `0` (positive zero) when `n === 0`, so that `Object.is(negate(0), 0)` is `true`.\n- Exported as a named export from `src/math.ts`, alongside the existing `add`.\n- `add` is unchanged — its signature `add(a: number, b: number): number` and body `return a + b` remain byte-for-byte identical.\n\n**Approach** — In `src/math.ts`, append the `negate` function below `add`. Guard the zero case explicitly so that `0` is not sign-flipped to `-0` (a naïve `-n` returns `-0` for `n === 0`, which fails `Object.is(..., 0)`). In `test/math.test.ts`, add a sibling `describe('negate', ...)` block that mirrors the existing `describe('add', ...)` shape (using `bun:test`'s `describe`, `expect`, `test`), importing `negate` alongside `add`, and asserting: positive input returns its negation, negative input returns its negation, and `Object.is(negate(0), 0)` is `true`.\n\n**Scope** — In: editing `src/math.ts` (add export) and `test/math.test.ts` (add tests). Out: any other math functions, input validation, new files outside `src/` and `test/`, modifications to `add`.\n\n**Interface (full signatures, verbatim from the spec)**\n- `negate(n: number): number` — named export from `src/math.ts`.\n- `add(a: number, b: number): number` — existing, unchanged.",
+      "acceptanceCriteria": [
+        "When negate(5) is called, it returns -5",
+        "When negate(-3) is called, it returns 3",
+        "When negate(0) is called, Object.is(negate(0), 0) is true (preserving canonical positive zero)",
+        "add(a: number, b: number) remains unchanged — its body still returns a + b for any numeric inputs (e.g. add(2, 3) still returns 5)"
+      ],
+      "tags": [
+        "feature",
+        "math"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Single additive function in one source file with a clear interface and one subtle edge case (Object.is on 0). Strict TS already configured. No new abstractions, no cross-module dependencies, no security surface. Standard patterns; tdd-simple is the right fit."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts"
+      ],
+      "suggestedCriteria": [
+        "When negate(0.5) is called, it returns -0.5",
+        "negate is importable via `import { negate } from '../src/math'` alongside the existing `add` export"
+      ],
+      "outOfScope": [
+        "Any other math functions",
+        "Input validation",
+        "New files outside `src/` and `test/`",
+        "Modifying the existing `add` function"
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Greenfield-style minimal codebase with a single math module.\n\n**Repository layout:**\n- `src/math.ts` — currently exports only `add(a: number, b: number): number` (src/math.ts:1). Will receive a new sibling export `negate`.\n- `test/math.test.ts` — bun:test suite, currently covers `add` only (test/math.test.ts:3). Will receive a new `describe('negate', ...)` block mirroring the existing pattern.\n- `package.json` — scripts: `bun test` and `bun run typecheck` (which is `tsc --noEmit`). Both must pass.\n- `tsconfig.json` — strict mode on, ES2022 target, bundler module resolution, types `[\"bun\"]`. The new function must satisfy strict TS (e.g. explicit return type `number`, no implicit `any`).\n\n**Scope of impact:**\n- Modification: `src/math.ts` — add the `negate` export next to `add`. `add` must be left byte-for-byte equivalent.\n- Modification: `test/math.test.ts` — add tests for `negate`, including the `Object.is(negate(0), 0)` zero-sign behaviour.\n- No other files import from `src/math.ts` today (verified via grep — only `test/math.test.ts` imports it), so no downstream consumers to update.\n- No new files outside `src/` and `test/`. No new dependencies.\n\n**Risks:**\n- The `-0` trap: `Object.is(negate(0), 0)` must be `true`. A naïve `-n` returns `-0` when `n === 0` (since `0` and `-0` are numerically equal but distinct under `Object.is`). The implementation must guard against this — e.g. `return n === -0 || n === 0 ? 0 : -n`. Implementer must not regress the existing `add` function.\n- Backward compatibility: `add`'s signature and body must remain identical; this is the regression anchor.\n\n**Architecture decisions:**\n- Single-file additive change. Follow the existing module style (named `export function`, no default export, explicit return type).\n- No new abstractions, no new modules — feature is constrained to `src/math.ts`.\n\n**Migration path:** None — purely additive. `add` callers are not affected.\n\n**Test strategy rationale:** This is a simple single-function addition; TDD is well-suited and the pipeline already runs `bun test` per the spec's acceptance criteria. `tdd-simple` matches the complexity.",
+  "outOfScope": [
+    "Any other math functions, input validation, or new files outside `src/` and `test/`.",
+    "Any other math functions",
+    "Input validation",
+    "New files outside `src/` and `test/`"
+  ],
+  "routingProfile": "koda-job-cmuxi2d1o0009ow08381n9yzt"
+}
