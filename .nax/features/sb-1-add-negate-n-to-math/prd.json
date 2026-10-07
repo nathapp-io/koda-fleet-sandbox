@@ -3,7 +3,7 @@
   "feature": "sb-1-add-negate-n-to-math",
   "branchName": "feat/sb-1-add-negate-n-to-math",
   "createdAt": "2026-01-01T00:00:00.000Z",
-  "updatedAt": "2026-10-07T02:40:50.822Z",
+  "updatedAt": "2026-10-07T02:44:29.769Z",
   "userStories": [
     {
       "id": "US-001",
@@ -27,7 +27,10 @@
       "routing": {
         "complexity": "simple",
         "testStrategy": "tdd-simple",
-        "reasoning": "Single additive function in one source file with a clear interface and one subtle edge case (Object.is on 0). Strict TS already configured. No new abstractions, no cross-module dependencies, no security surface. Standard patterns; tdd-simple is the right fit."
+        "reasoning": "Single additive function in one source file with a clear interface and one subtle edge case (Object.is on 0). Strict TS already configured. No new abstractions, no cross-module dependencies, no security surface. Standard patterns; tdd-simple is the right fit.",
+        "initialComplexity": "simple",
+        "modelTier": "fast",
+        "initialModelTier": "fast"
       },
       "contextFiles": [
         "src/math.ts",
@@ -37,13 +40,14 @@
         "When negate(0.5) is called, it returns -0.5",
         "negate is importable via `import { negate } from '../src/math'` alongside the existing `add` export"
       ],
+      "workdirSource": "defaulted",
+      "priorErrors": [],
+      "priorFailures": [],
+      "storyPoints": 1,
+      "storyGitRef": "c716c312b47994783773e092cb1c8413b2238632",
       "outOfScope": [
-        "Any other math functions",
-        "Input validation",
-        "New files outside `src/` and `test/`",
         "Modifying the existing `add` function"
-      ],
-      "workdirSource": "defaulted"
+      ]
     }
   ],
   "analysis": "Greenfield-style minimal codebase with a single math module.\n\n**Repository layout:**\n- `src/math.ts` — currently exports only `add(a: number, b: number): number` (src/math.ts:1). Will receive a new sibling export `negate`.\n- `test/math.test.ts` — bun:test suite, currently covers `add` only (test/math.test.ts:3). Will receive a new `describe('negate', ...)` block mirroring the existing pattern.\n- `package.json` — scripts: `bun test` and `bun run typecheck` (which is `tsc --noEmit`). Both must pass.\n- `tsconfig.json` — strict mode on, ES2022 target, bundler module resolution, types `[\"bun\"]`. The new function must satisfy strict TS (e.g. explicit return type `number`, no implicit `any`).\n\n**Scope of impact:**\n- Modification: `src/math.ts` — add the `negate` export next to `add`. `add` must be left byte-for-byte equivalent.\n- Modification: `test/math.test.ts` — add tests for `negate`, including the `Object.is(negate(0), 0)` zero-sign behaviour.\n- No other files import from `src/math.ts` today (verified via grep — only `test/math.test.ts` imports it), so no downstream consumers to update.\n- No new files outside `src/` and `test/`. No new dependencies.\n\n**Risks:**\n- The `-0` trap: `Object.is(negate(0), 0)` must be `true`. A naïve `-n` returns `-0` when `n === 0` (since `0` and `-0` are numerically equal but distinct under `Object.is`). The implementation must guard against this — e.g. `return n === -0 || n === 0 ? 0 : -n`. Implementer must not regress the existing `add` function.\n- Backward compatibility: `add`'s signature and body must remain identical; this is the regression anchor.\n\n**Architecture decisions:**\n- Single-file additive change. Follow the existing module style (named `export function`, no default export, explicit return type).\n- No new abstractions, no new modules — feature is constrained to `src/math.ts`.\n\n**Migration path:** None — purely additive. `add` callers are not affected.\n\n**Test strategy rationale:** This is a simple single-function addition; TDD is well-suited and the pipeline already runs `bun test` per the spec's acceptance criteria. `tdd-simple` matches the complexity.",
