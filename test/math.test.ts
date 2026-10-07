@@ -19,4 +19,8 @@ describe('negate', () => {
   test('AC3: negate(0) returns canonical positive zero', () => {
     expect(Object.is(negate(0), 0)).toBe(true)
   })
+
+  test('AC5: negate(0.5) returns -0.5', () => {
+    expect(negate(0.5)).toBe(-0.5)
+  })
 })
