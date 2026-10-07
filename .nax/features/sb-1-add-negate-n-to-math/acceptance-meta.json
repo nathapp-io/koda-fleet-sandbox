@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-10-07T02:44:27.196Z",
+  "acFingerprint": "sha256:3c89b242bfa15770a3af9b0afa52b57bc2393d5889ff026feb4c1ac60c2cc443",
+  "layoutFingerprint": "sha256:01556b7667928c1cfc2699d6bbd46cc3854d4a435749acda532b5935d4d74e9c",
+  "storyCount": 1,
+  "acCount": 4,
+  "generator": "nax",
+  "coverage": [
+    {
+      "testPath": ".nax/features/sb-1-add-negate-n-to-math/.nax-acceptance.test.ts",
+      "expected": 4,
+      "found": 4,
+      "missing": []
+    }
+  ]
+}
