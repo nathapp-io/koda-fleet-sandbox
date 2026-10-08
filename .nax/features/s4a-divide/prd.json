@@ -1,0 +1,100 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "s4a-divide",
+  "branchName": "feat/s4a-divide",
+  "createdAt": "2026-01-15T00:00:00.000Z",
+  "updatedAt": "2026-10-08T06:39:31.200Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add divide function to src/math.ts with division-by-zero guard",
+      "description": "**Goal** — Add a `divide(a, b): number` named export to `src/math.ts` that returns `a / b` and throws on division by zero, while leaving `add` and `negate` unchanged.\n\n**Motivation** — The koda fleet S4a notifications live check exercises the addition of a sibling arithmetic function next to `add`, with a minimal error-handling contract.\n\n**Approach** —\n1. Open `src/math.ts`. Do NOT modify the existing `add` or `negate` functions — their bodies must remain byte-for-byte the same.\n2. Add a new named export below (or above) the existing functions, with the exact signature `function divide(a: number, b: number): number`.\n3. The function must `return a / b` for the normal path.\n4. Before performing the division, check whether `b === 0`. If true, `throw new Error('division by zero')` — the error message string must be exactly `division by zero` (no trailing period, no extra whitespace, no other punctuation).\n5. The function must be exported as a named export (no default export, no export at the bottom of an unexported function).\n6. Mirror the file's existing style: no semicolons, two-space indent, arrow-free function declarations matching the style of `add` and `negate`.\n\n**Scope** — In: adding the `divide` function and its `Error('division by zero')` guard in `src/math.ts`. Out: modifying `add`, modifying `negate`, adding any new math function other than `divide`, adding input validation for NaN/Infinity/non-number values, creating new files outside `src/` and `test/`, changing `tsconfig.json` or `package.json`.\n\n**Interface**\n```typescript\nexport function divide(a: number, b: number): number {\n  if (b === 0) throw new Error('division by zero')\n  return a / b\n}\n```",
+      "acceptanceCriteria": [
+        "When called with two non-zero numbers, `divide(a, b)` returns the value of `a / b` (e.g. `divide(12, 4)` returns `3` and `divide(-10, 5)` returns `-2`)",
+        "When `b` is `0`, `divide(a, 0)` throws an `Error` whose `message` is exactly the string `division by zero` (no trailing punctuation)",
+        "`divide` is exported as a named export from `src/math.ts` (importable via `import { divide } from '../src/math'`)",
+        "The existing `add` function in `src/math.ts` remains unchanged (preserving its existing behavior of returning the sum of its two numeric arguments)"
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "koda-fleet-s4a"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Single-file additive change to an existing module. No new dependencies, no new abstractions, standard patterns already established by `add` and `negate` in the same file. ACs are direct behavioral assertions on a pure function. Strict TS + bun:test provide the safety net. Not security-critical, no cross-module concerns, so simple + tdd-simple is the right classification."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts"
+      ],
+      "suggestedCriteria": [
+        "When `a` is `0`, `divide(0, b)` returns `0` for any non-zero `b`",
+        "When both `a` and `b` are the same non-zero number, `divide(a, a)` returns `1`"
+      ],
+      "outOfScope": [
+        "Modifying the `add` function",
+        "Modifying the `negate` function",
+        "Adding any new math function other than `divide`",
+        "Input validation for NaN, Infinity, or non-number values",
+        "Creating new files outside `src/` and `test/`",
+        "Changing `tsconfig.json` or `package.json`"
+      ],
+      "workdirSource": "defaulted"
+    },
+    {
+      "id": "US-002",
+      "title": "Add divide tests to test/math.test.ts mirroring the existing describe/test style",
+      "description": "**Goal** — Add a `describe('divide', ...)` block to `test/math.test.ts` covering the happy path, the negative-numerator case, and the division-by-zero throw, using the same AC-prefixed naming convention already used by the `negate` tests.\n\n**Motivation** — The repo convention is one test file per module in `test/`, and existing tests name their cases with an `ACn:` prefix. Adding `divide` without tests in the same file would leave the function uncovered by the project's own convention.\n\n**Approach** —\n1. Open `test/math.test.ts`.\n2. Extend the import line at the top to also import `divide` from `../src/math` (the existing import already pulls `add` and `negate` — add `divide` to the same import statement, keeping alphabetical order if practical, otherwise matching the import's existing ordering).\n3. Add a new `describe('divide', ...)` block below the existing `describe('negate', ...)` block. Do NOT modify any existing test in the file.\n4. Inside the new `describe`, add one `test` per acceptance criterion from US-001, using the `ACn: <assertion>` naming convention:\n   - `test('AC1: divide(12, 4) returns 3', ...)` asserting `expect(divide(12, 4)).toBe(3)`.\n   - `test('AC2: divide(-10, 5) returns -2', ...)` asserting `expect(divide(-10, 5)).toBe(-2)`.\n   - `test('AC3: divide(7, 0) throws Error with message \"division by zero\"', ...)` using `expect(() => divide(7, 0)).toThrow('division by zero')` (bun:test's `toThrow` accepts a string and matches the error message).\n5. Mirror existing style: single-quote strings, no semicolons, two-space indent, no extra blank lines between tests beyond what the existing block uses.\n\n**Scope** — In: extending the import line and adding the new `describe('divide', ...)` block in `test/math.test.ts`. Out: creating any new test file, modifying any existing test in `test/math.test.ts` (including the `add` and `negate` blocks), modifying `src/math.ts`, adding tests for anything other than `divide`.\n\n**Interface**\n```typescript\nimport { add, divide, negate } from '../src/math'\n\ndescribe('divide', () => {\n  test('AC1: divide(12, 4) returns 3', () => {\n    expect(divide(12, 4)).toBe(3)\n  })\n\n  test('AC2: divide(-10, 5) returns -2', () => {\n    expect(divide(-10, 5)).toBe(-2)\n  })\n\n  test('AC3: divide(7, 0) throws Error with message \"division by zero\"', () => {\n    expect(() => divide(7, 0)).toThrow('division by zero')\n  })\n})\n```",
+      "acceptanceCriteria": [
+        "`test/math.test.ts` imports `divide` from `../src/math` alongside the existing `add` and `negate` imports (preserving the existing named-export import style)",
+        "A `describe('divide', ...)` block exists in `test/math.test.ts` containing exactly three test cases — one for `divide(12, 4) === 3`, one for `divide(-10, 5) === -2`, and one for `divide(7, 0)` throwing an Error whose message is exactly the string `division by zero`",
+        "Each test case in the new `describe('divide', ...)` block asserts a single observable behavior (return value or thrown error message) with no quality-gate assertions",
+        "The existing `describe('add', ...)` and `describe('negate', ...)` blocks in `test/math.test.ts` remain unchanged (preserving their existing test cases and assertions)"
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "koda-fleet-s4a",
+        "tests"
+      ],
+      "dependencies": [
+        "US-001"
+      ],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Test creation is folded into the implementation flow per the story rules — the implementer writes the tests as part of making US-001's behavior verifiable. This story is the test-side companion to US-001, isolated as its own unit of value because the project's convention is to have a `describe` block per function in the single test file, and listing it as a separate unit keeps the `add` regression anchor explicit. Still a single-file additive change with no new dependencies and no new patterns."
+      },
+      "contextFiles": [
+        "test/math.test.ts",
+        "src/math.ts"
+      ],
+      "outOfScope": [
+        "Modifying any existing test in `test/math.test.ts` (including the `add` and `negate` blocks)",
+        "Creating any new test file",
+        "Modifying `src/math.ts`",
+        "Adding tests for anything other than `divide`"
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Repo is a minimal throwaway TypeScript library on Bun + strict TS. Two source files of interest: src/math.ts (currently exports `add(a, b)` returning a+b and `negate(n)` returning -n with a zero guard) and test/math.test.ts (bun:test, imports `add` and `negate` from ../src/math, uses `describe`/`test`/`expect` patterns, tests are named with an AC-prefixed convention like 'AC1: ...'). The spec asks to add a `divide(a, b): number` named export to src/math.ts, next to `add`, that returns a / b and throws `Error('division by zero')` when b is 0. `add` must be unchanged (regression anchor). Conventions to mirror: named exports only, no default exports, strict TS, `bun:test` for tests, one test file per module in test/ (so add to existing test/math.test.ts rather than create a new file — the spec's 'no new files outside src/ and test/' implicitly allows extending the existing test file). No new dependencies. Risks: (1) accidentally editing `add` — must preserve its exact body; (2) the zero-guard must be a real `throw new Error('division by zero')` and not rely on JS letting 1/0 return Infinity silently (which would violate AC3); (3) the Error message string must match exactly — the spec says `'division by zero'` (no trailing punctuation). Test conventions: existing tests use `describe('fnName', ...)` blocks and per-case `test('ACn: <assertion>', ...)`. The implementer must mirror that style. AC2's negative numerator covers sign correctness; AC1's 12/4 covers the standard happy path. No other files import or depend on the math module beyond the test file. tsconfig strict mode is on so the throw must be reachable; b being `number` (not `unknown`) means the guard is the only error path. The spec's 'Implementation steps' section tells the implementer to run two specific shell commands (wc and git log) via the Bash tool — that is an external operational instruction for the implementer, not a code/test requirement and not part of the story's acceptance criteria (the ACs that come from the spec are AC1–AC4, where AC4 about bun test/typecheck is a quality gate and must not be listed in acceptanceCriteria per the rules; the shell-command steps are post-implementation reporting for the implementer, not behavior of the feature). Out of scope: any other math functions, input validation beyond division by zero (so no NaN/Infinity guards, no non-number validation), no new files outside src/ and test/.",
+  "outOfScope": [
+    "Any other math functions, input validation beyond division by zero, or new files outside `src/` and `test/`.",
+    "Any other math functions",
+    "Input validation beyond division by zero",
+    "New files outside `src/` and `test/`"
+  ],
+  "routingProfile": "koda-job-cmuz60sbs0002kx08lvngxwao"
+}
