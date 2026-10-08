@@ -3,7 +3,7 @@
   "feature": "s4a-divide",
   "branchName": "feat/s4a-divide",
   "createdAt": "2026-01-15T00:00:00.000Z",
-  "updatedAt": "2026-10-08T06:39:31.200Z",
+  "updatedAt": "2026-10-08T06:41:13.159Z",
   "userStories": [
     {
       "id": "US-001",
@@ -28,7 +28,10 @@
       "routing": {
         "complexity": "simple",
         "testStrategy": "tdd-simple",
-        "reasoning": "Single-file additive change to an existing module. No new dependencies, no new abstractions, standard patterns already established by `add` and `negate` in the same file. ACs are direct behavioral assertions on a pure function. Strict TS + bun:test provide the safety net. Not security-critical, no cross-module concerns, so simple + tdd-simple is the right classification."
+        "reasoning": "Single-file additive change to an existing module. No new dependencies, no new abstractions, standard patterns already established by `add` and `negate` in the same file. ACs are direct behavioral assertions on a pure function. Strict TS + bun:test provide the safety net. Not security-critical, no cross-module concerns, so simple + tdd-simple is the right classification.",
+        "initialComplexity": "simple",
+        "modelTier": "fast",
+        "initialModelTier": "fast"
       },
       "contextFiles": [
         "src/math.ts",
@@ -38,6 +41,11 @@
         "When `a` is `0`, `divide(0, b)` returns `0` for any non-zero `b`",
         "When both `a` and `b` are the same non-zero number, `divide(a, a)` returns `1`"
       ],
+      "workdirSource": "defaulted",
+      "priorErrors": [],
+      "priorFailures": [],
+      "storyPoints": 1,
+      "storyGitRef": "e83fc76c74902e1e33441338251bb10c02996ded",
       "outOfScope": [
         "Modifying the `add` function",
         "Modifying the `negate` function",
@@ -45,8 +53,7 @@
         "Input validation for NaN, Infinity, or non-number values",
         "Creating new files outside `src/` and `test/`",
         "Changing `tsconfig.json` or `package.json`"
-      ],
-      "workdirSource": "defaulted"
+      ]
     },
     {
       "id": "US-002",
@@ -80,13 +87,16 @@
         "test/math.test.ts",
         "src/math.ts"
       ],
+      "workdirSource": "defaulted",
+      "priorErrors": [],
+      "priorFailures": [],
+      "storyPoints": 1,
       "outOfScope": [
         "Modifying any existing test in `test/math.test.ts` (including the `add` and `negate` blocks)",
         "Creating any new test file",
         "Modifying `src/math.ts`",
         "Adding tests for anything other than `divide`"
-      ],
-      "workdirSource": "defaulted"
+      ]
     }
   ],
   "analysis": "Repo is a minimal throwaway TypeScript library on Bun + strict TS. Two source files of interest: src/math.ts (currently exports `add(a, b)` returning a+b and `negate(n)` returning -n with a zero guard) and test/math.test.ts (bun:test, imports `add` and `negate` from ../src/math, uses `describe`/`test`/`expect` patterns, tests are named with an AC-prefixed convention like 'AC1: ...'). The spec asks to add a `divide(a, b): number` named export to src/math.ts, next to `add`, that returns a / b and throws `Error('division by zero')` when b is 0. `add` must be unchanged (regression anchor). Conventions to mirror: named exports only, no default exports, strict TS, `bun:test` for tests, one test file per module in test/ (so add to existing test/math.test.ts rather than create a new file — the spec's 'no new files outside src/ and test/' implicitly allows extending the existing test file). No new dependencies. Risks: (1) accidentally editing `add` — must preserve its exact body; (2) the zero-guard must be a real `throw new Error('division by zero')` and not rely on JS letting 1/0 return Infinity silently (which would violate AC3); (3) the Error message string must match exactly — the spec says `'division by zero'` (no trailing punctuation). Test conventions: existing tests use `describe('fnName', ...)` blocks and per-case `test('ACn: <assertion>', ...)`. The implementer must mirror that style. AC2's negative numerator covers sign correctness; AC1's 12/4 covers the standard happy path. No other files import or depend on the math module beyond the test file. tsconfig strict mode is on so the throw must be reachable; b being `number` (not `unknown`) means the guard is the only error path. The spec's 'Implementation steps' section tells the implementer to run two specific shell commands (wc and git log) via the Bash tool — that is an external operational instruction for the implementer, not a code/test requirement and not part of the story's acceptance criteria (the ACs that come from the spec are AC1–AC4, where AC4 about bun test/typecheck is a quality gate and must not be listed in acceptanceCriteria per the rules; the shell-command steps are post-implementation reporting for the implementer, not behavior of the feature). Out of scope: any other math functions, input validation beyond division by zero (so no NaN/Infinity guards, no non-number validation), no new files outside src/ and test/.",
