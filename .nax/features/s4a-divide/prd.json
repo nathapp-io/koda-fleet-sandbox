@@ -3,7 +3,7 @@
   "feature": "s4a-divide",
   "branchName": "feat/s4a-divide",
   "createdAt": "2026-01-15T00:00:00.000Z",
-  "updatedAt": "2026-10-08T06:42:35.075Z",
+  "updatedAt": "2026-10-08T06:48:50.376Z",
   "userStories": [
     {
       "id": "US-001",
@@ -13,7 +13,9 @@
         "When called with two non-zero numbers, `divide(a, b)` returns the value of `a / b` (e.g. `divide(12, 4)` returns `3` and `divide(-10, 5)` returns `-2`)",
         "When `b` is `0`, `divide(a, 0)` throws an `Error` whose `message` is exactly the string `division by zero` (no trailing punctuation)",
         "`divide` is exported as a named export from `src/math.ts` (importable via `import { divide } from '../src/math'`)",
-        "The existing `add` function in `src/math.ts` remains unchanged (preserving its existing behavior of returning the sum of its two numeric arguments)"
+        "The existing `add` function in `src/math.ts` remains unchanged (preserving its existing behavior of returning the sum of its two numeric arguments)",
+        "When `a` is `0`, `divide(0, b)` returns `0` for any non-zero `b`",
+        "When both `a` and `b` are the same non-zero number, `divide(a, a)` returns `1`"
       ],
       "tags": [
         "feature",
@@ -36,10 +38,6 @@
       "contextFiles": [
         "src/math.ts",
         "test/math.test.ts"
-      ],
-      "suggestedCriteria": [
-        "When `a` is `0`, `divide(0, b)` returns `0` for any non-zero `b`",
-        "When both `a` and `b` are the same non-zero number, `divide(a, a)` returns `1`"
       ],
       "workdirSource": "defaulted",
       "priorErrors": [],
@@ -74,8 +72,8 @@
       "dependencies": [
         "US-001"
       ],
-      "status": "pending",
-      "passes": false,
+      "status": "passed",
+      "passes": true,
       "attempts": 0,
       "escalations": [],
       "routing": {
