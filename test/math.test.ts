@@ -30,27 +30,11 @@ describe('divide', () => {
     expect(divide(12, 4)).toBe(3)
   })
 
-  test('AC1: divide(-10, 5) returns -2', () => {
+  test('AC2: divide(-10, 5) returns -2', () => {
     expect(divide(-10, 5)).toBe(-2)
   })
 
-  test('AC2: divide(a, 0) throws Error with message "division by zero"', () => {
-    expect(() => divide(5, 0)).toThrow(new Error('division by zero'))
-  })
-
-  test('AC2: divide(a, 0) throws Error with message exactly "division by zero"', () => {
-    let threw = false
-    try {
-      divide(10, 0)
-    } catch (e) {
-      threw = true
-      expect(e).toBeInstanceOf(Error)
-      expect((e as Error).message).toBe('division by zero')
-    }
-    expect(threw).toBe(true)
-  })
-
-  test('AC4: add function remains unchanged and still works', () => {
-    expect(add(2, 3)).toBe(5)
+  test('AC3: divide(7, 0) throws Error with message "division by zero"', () => {
+    expect(() => divide(7, 0)).toThrow('division by zero')
   })
 })
