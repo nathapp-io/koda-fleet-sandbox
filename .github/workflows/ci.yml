@@ -1,0 +1,12 @@
+name: ci
+on:
+  push:
+    branches: ['feat/wf-clamp3']
+  pull_request:
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: CHANGELOG.md is required
+        run: test -f CHANGELOG.md
