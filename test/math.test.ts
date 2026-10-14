@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { add, negate } from '../src/math'
+import { add, negate, clamp } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
@@ -22,5 +22,23 @@ describe('negate', () => {
 
   test('AC5: negate(0.5) returns -0.5', () => {
     expect(negate(0.5)).toBe(-0.5)
+  })
+})
+
+describe('clamp', () => {
+  test('AC1: clamp(5, 0, 10) returns 5', () => {
+    expect(clamp(5, 0, 10)).toBe(5)
+  })
+
+  test('AC2: clamp(-3, 0, 10) returns 0', () => {
+    expect(clamp(-3, 0, 10)).toBe(0)
+  })
+
+  test('AC3: clamp(42, 0, 10) returns 10', () => {
+    expect(clamp(42, 0, 10)).toBe(10)
+  })
+
+  test('AC4: clamp(1, 5, 2) throws "min must not exceed max"', () => {
+    expect(() => clamp(1, 5, 2)).toThrow('min must not exceed max')
   })
 })
