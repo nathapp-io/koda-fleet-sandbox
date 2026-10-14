@@ -1,0 +1,56 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "wf-clamp",
+  "branchName": "feat/wf-clamp",
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2026-10-14T06:38:13.196Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add clamp(value, min, max) to src/math.ts alongside existing add/negate exports",
+      "description": "**Goal** — Add a `clamp(value, min, max)` function to `src/math.ts`, next to `add`, exported as a named export, with bun:test coverage added to `test/math.test.ts`.\n\n**Motivation** — The feature requires a `clamp(value, min, max)` function that returns `value` limited to the inclusive range `[min, max]`, throws when the range is inverted, and leaves the existing `add` and `negate` exports unchanged.\n\n**Approach** — Append the new function to `src/math.ts` after `negate`, following the existing patterns: a pure, named-exported function with an explicit `number` return type and no new dependencies. Implementation: (1) if `min > max`, `throw new Error('min must not exceed max')`; (2) if `value < min` return `min`; (3) if `value > max` return `max`; (4) otherwise return `value`. Do not rename, reorder, or otherwise alter `add` or `negate` — their behavior must be preserved exactly (existing tests keep covering them). Extend `test/math.test.ts` with a `describe('clamp')` block in the existing style (`import { add, negate, clamp } from '../src/math'`, `bun:test`), with one test per spec acceptance criterion. `bun test` and `bun run typecheck` must pass with the new function and tests in place.\n\n**Scope** — In: `src/math.ts` (clamp addition) and `test/math.test.ts` (clamp tests). Out: no other math functions; no new files; no changes under `.github/` (in particular never edit or remove `.github/workflows/live-check-fail.yml`, which intentionally always fails).\n\n**Interface**\n```typescript\nexport function clamp(value: number, min: number, max: number): number\n```\n\nReturns `value` limited to the range `[min, max]`. Throws `Error('min must not exceed max')` when `min > max`. Named export from `src/math.ts`; `add` and `negate` are unchanged.",
+      "acceptanceCriteria": [
+        "clamp(5, 0, 10) returns 5",
+        "clamp(-3, 0, 10) returns 0",
+        "clamp(42, 0, 10) returns 10",
+        "clamp(1, 5, 2) throws an Error whose message is exactly 'min must not exceed max'",
+        "After adding clamp, add(2, 3) still returns 5 and negate(5) still returns -5",
+        "bun test and bun run typecheck pass"
+      ],
+      "tags": [
+        "feature",
+        "math"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Single additive function in one existing source file plus test additions in the existing test file, standard existing patterns already present in src/math.ts and test/math.test.ts, no new dependencies or abstractions; not security-critical, so tdd-simple fits."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts"
+      ],
+      "suggestedCriteria": [
+        "clamp(0, 0, 10) returns 0 when value equals the inclusive lower bound min",
+        "clamp(10, 0, 10) returns 10 when value equals the inclusive upper bound max",
+        "clamp(7, 5, 5) returns 5 when min === max",
+        "clamp(-1, 2, 1) throws an Error whose message is exactly 'min must not exceed max' when value is below the inverted range"
+      ],
+      "outOfScope": [
+        "Any other math functions, new files outside `src/` and `test/`.",
+        "Any change under `.github/` — in particular, do not edit or remove `.github/workflows/live-check-fail.yml` (the branch's CI workflow intentionally always fails)."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Greenfield-style single-module feature on a tiny, dependency-free bun + TypeScript strict library.\n\nCurrent state:\n- src/math.ts (8 lines) exports only two named functions: add(a, b) and negate(n). Test file test/math.test.ts (26 lines) uses bun:test (describe/expect/test) and imports { add, negate } from '../src/math'. tsconfig includes src and test with ES2022/ESNext/bundler resolution; scripts: 'test: bun test', 'typecheck: tsc --noEmit'. No new dependencies allowed.\n\nFiles to modify:\n- src/math.ts: append a named export clamp(value: number, min: number, max: number): number after negate. Semantics: when min > max throw Error('min must not exceed max'); otherwise return value limited to the inclusive range [min, max] (min if value < min, max if value > max, else value). add and negate must remain behaviorally unchanged (regression anchor; existing tests cover them and one story AC asserts the preservation).\n- test/math.test.ts: extend with a clamp describe block covering the spec acceptance criteria. Follow the existing style (import from '../src/math'; bun:test).\n\nDependency/import impact:\n- Only test/math.test.ts imports src/math.ts (grep confirmed, no other references). No other modules depend on the file, so adding an export is purely additive — zero breaking-change or migration risk. The only consumer is the bun:test suite (not part of any published surface; package is a sandbox library).\n\nRisks/notes:\n- Spec acceptance criterion 5 ('bun test and bun run typecheck pass') is preserved verbatim in the story's acceptanceCriteria: it is the spec's overall verification hook that the whole feature compiles (typecheck) and the suite passes, enforced by the pipeline and the story's tdd-simple test discipline (tests written for ACs 1-4, typecheck covers the new signature).\n- The branch intentionally carries a CI workflow (.github/workflows/live-check-fail.yml) that always fails on purpose; it is absent from this worktree snapshot but must never be edited or removed. Any change under .github/ is out of scope.\n- Edge semantics not spelled out in the spec but implied by an inclusive [min, max] range: min === max returns that value for any input; value exactly equal to min or max is returned unchanged. These are captured as suggestedCriteria for a hardening pass.\n\nArchitecture decision: follow the existing module pattern — pure named-export function in src/math.ts, one bun:test describe block per function in test/math.test.ts, no new files or dependencies. Single simple story.\n\nStory dependency order: a single story (US-001) implements clamp plus its tests in one unit; no upstream dependencies.",
+  "outOfScope": [
+    "Any other math functions, new files outside `src/` and `test/`, and any change under `.github/`."
+  ],
+  "routingProfile": "native-ds+workflow+cheap-0731+koda-job-cmv7q7o26000708pfmf4jo61d"
+}
