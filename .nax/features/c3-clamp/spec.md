@@ -36,3 +36,5 @@ outside `src/` and `test/`.
 
 Other math functions, NaN/infinity special-casing, reversed-argument helpers, or any
 change to existing exports.
+
+<!-- remote edit for the C3 stale-banner live check -->
