@@ -1,0 +1,58 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "wf-clamp3",
+  "branchName": "feat/wf-clamp3",
+  "createdAt": "2026-06-04T00:00:00Z",
+  "updatedAt": "2026-10-14T08:16:11.116Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add inclusive clamp with invalid-bound rejection",
+      "description": "**Goal** — Add a `clamp(value, min, max)` function to `src/math.ts`, next to `add`.\n\n**Motivation** — Callers need to limit a numeric value to an inclusive range without altering the existing arithmetic helpers.\n\n**Approach** — Export clamp as a named export from src/math.ts. First check min > max and throw Error('min must not exceed max'); otherwise return min when value is below min, max when value is above max, and value when it is within [min, max]. `add` and `negate` are unchanged. Extend the existing test/math.test.ts named import and add clamp cases in that same test file, preserving all existing add and negate tests. Write failing clamp tests first, implement the function, then run bun test and bun run typecheck; both commands must pass.\n\n**Scope** — In: the additive clamp implementation in src/math.ts, its behavioral tests in test/math.test.ts, and validation using bun test and bun run typecheck without configuration changes. Out: Any other math functions, new files outside `src/` and `test/`, and any change under `.github/`.\n\n**Interface**\n```typescript\nclamp(value: number, min: number, max: number): number\n```",
+      "acceptanceCriteria": [
+        "clamp(5, 0, 10) returns 5.",
+        "clamp(-3, 0, 10) returns 0.",
+        "clamp(42, 0, 10) returns 10.",
+        "clamp(1, 5, 2) throws Error('min must not exceed max').",
+        "When bun test runs after implementation, it exits with status 0.",
+        "When bun run typecheck runs after implementation, it exits with status 0."
+      ],
+      "tags": [
+        "feature",
+        "math"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "A pure additive function in one existing source module with tests in its existing Bun test file needs only standard bounds checks, no abstractions or dependencies, and straightforward failing-tests-first implementation."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json",
+        "tsconfig.json",
+        "AGENTS.md"
+      ],
+      "suggestedCriteria": [
+        "clamp(0, 0, 10) returns 0.",
+        "clamp(10, 0, 10) returns 10.",
+        "clamp(42, 5, 5) returns 5.",
+        "clamp(0.5, 0, 1) returns 0.5.",
+        "clamp(7, 5, 2) throws Error('min must not exceed max').",
+        "add(2, 3) returns 5, unchanged from existing behavior.",
+        "negate(0) returns canonical positive zero, unchanged from existing behavior."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Goal: add clamp(value: number, min: number, max: number): number as a named export next to add in src/math.ts. It limits value to the inclusive range [min, max] and throws Error('min must not exceed max') when min > max. This is an additive enhancement, not a new architecture. Source and impact: src/math.ts:1-3 implements add, and src/math.ts:5-8 implements negate with canonical positive zero for zero inputs. Leave both implementations and signatures unchanged. Modify only src/math.ts and test/math.test.ts; no new implementation files are needed. The only source module found is src/math.ts. The existing direct consumer is test/math.test.ts:2, which imports add and negate from '../src/math'; extend this named import to include clamp. No other source consumers or barrel exports were found. Tests: test/math.test.ts:1 imports bun:test; lines 4-8 assert add(2, 3) returns 5; lines 10-26 assert negate behavior for positive, negative, zero, and fractional inputs. In particular, lines 19-20 use Object.is to protect canonical positive zero. Preserve all these tests and add a clamp describe block to the same file. Architecture: use a small pure function with an initial min > max guard, then return min below the lower bound, max above the upper bound, and value otherwise. No helper abstraction, new dependency, barrel, or configuration change is required. AGENTS.md:26-30 establishes strict TypeScript, named exports, pure small functions, no new dependencies, and one Bun test file per module; no deeper AGENTS.md was found. package.json:2 identifies koda-fleet-sandbox; package.json:5-8 defines bun test and tsc --noEmit through bun run typecheck; package.json:9-12 lists Bun types and TypeScript development dependencies. tsconfig.json:3-9 specifies ES2022, ESNext modules, bundler resolution, strict mode, and Bun types; tsconfig.json:10 includes src and test. Risks: changing existing helpers, losing negate's positive-zero behavior, making bounds exclusive, or swapping invalid bounds instead of throwing. Check invalid bounds before any clamping return and assert the exact Error message. NaN, infinity, and signed-zero behavior for clamp are unspecified; do not add new numeric validation requirements. Migration: none, because the existing exports and callers remain compatible. Implementation is one simple additive source change with tests written first in the existing test module; it needs no story dependencies. Acceptance audit: spec AC1 is clamp(5, 0, 10) returning 5; AC2 is clamp(-3, 0, 10) returning 0; AC3 is clamp(42, 0, 10) returning 10; AC4 is clamp(1, 5, 2) throwing min must not exceed max; AC5 is bun test and bun run typecheck passing. All are now represented in US-001.acceptanceCriteria. AC5 is split into two observable exit-code assertions to keep each criterion independently testable, as required by this refinement's explicit preservation instruction. The original four examples contain no trailing regression qualifiers to restore. The invalid-range example supplies the negative path. The implementation does not change existing behavior, signatures, or stubs; retained tests protect the existing exports. Inclusive-bound, equal-bound, and fractional cases are optional suggested criteria rather than invented spec ACs. Context files all already exist, and src/math.ts is the spec's explicit target. Routing is simple/tdd-simple because only one source module receives a pure additive function, with accompanying tests in its existing test file. The entire feature exclusion sentence is copied verbatim into the top-level exclusions and echoed in the story scope. The requested .nax PRD is a planning artifact, not permission for implementation files outside src/ and test/. No tests or typecheck commands were executed during drafting or this audit.",
+  "outOfScope": [
+    "Any other math functions, new files outside `src/` and `test/`, and any change under `.github/`."
+  ],
+  "routingProfile": "native-ds+koda-job-cmv7u2opw001s08mldg4fzjm2"
+}
