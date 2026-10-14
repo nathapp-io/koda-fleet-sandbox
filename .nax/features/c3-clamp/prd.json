@@ -3,7 +3,7 @@
   "feature": "c3-clamp",
   "branchName": "feat/c3-clamp",
   "createdAt": "2026-05-26T00:00:00Z",
-  "updatedAt": "2026-10-14T12:15:24.989Z",
+  "updatedAt": "2026-10-14T12:15:43.927Z",
   "userStories": [
     {
       "id": "US-001",
@@ -27,7 +27,10 @@
       "routing": {
         "complexity": "medium",
         "testStrategy": "tdd-simple",
-        "reasoning": "The two-file source/test change uses existing pure-function and Bun test patterns with no new abstractions or dependencies, so medium complexity and single-session failing-tests-first implementation are sufficient."
+        "reasoning": "The two-file source/test change uses existing pure-function and Bun test patterns with no new abstractions or dependencies, so medium complexity and single-session failing-tests-first implementation are sufficient.",
+        "initialComplexity": "medium",
+        "modelTier": "fast",
+        "initialModelTier": "fast"
       },
       "contextFiles": [
         "src/math.ts",
@@ -44,7 +47,11 @@
         "clamp(42, 10, 1) throws an Error with message 'min greater than max' rather than returning a bound when the range is reversed.",
         "clamp(-0, -1, 1) returns negative zero unchanged when the value is inside the range."
       ],
-      "workdirSource": "defaulted"
+      "workdirSource": "defaulted",
+      "priorErrors": [],
+      "priorFailures": [],
+      "storyPoints": 1,
+      "storyGitRef": "bfda2fbeb7d97e0cad5b7d6d9ede68fe21a6c03d"
     }
   ],
   "analysis": "Existing-library enhancement: src/math.ts:1-3 exports add; src/math.ts:5-8 exports negate, including positive-zero normalization. Append clamp without changing these exports. test/math.test.ts:1-2 directly imports math functions using bun:test; it is the only consumer found in the inspected source/test trees. Extend that import and add describe('clamp', ...) to this existing file. Preserve addition tests at test/math.test.ts:4-8 and negation tests at test/math.test.ts:10-26, especially Object.is(negate(0), 0) at lines 19-20. No barrel, helper, call-site migration, or new implementation file is needed.\n\nUse a pure named export with explicit numeric parameters and return type. Validate min > max before clamping, throwing new Error('min greater than max'); return min for value < min, max for value > max, otherwise value unchanged. Equal bounds are allowed. Do not special-case NaN/infinity or sort reversed bounds. AGENTS.md:26-32 requires named exports, strict TypeScript, small pure functions, and no dependencies. package.json:4-8 defines ESM and verification scripts; tsconfig.json:3-10 configures ES2022, ESNext/bundler resolution, strict checking, Bun types, and inclusion of src/test.\n\nOne story modifies src/math.ts and test/math.test.ts. Write failing clamp tests first, implement, then run bun test and bun run typecheck; these are verification gates, not ACs. Implementation creates no new files outside src/test and changes no dependencies. Risks are incorrect guard ordering, an incorrect exception message, failure to preserve in-range values, and accidental regression of negate's positive-zero behavior. This additive API needs no migration; existing consumers retain their imports and behavior.\n\nAudit: spec AC1 maps to unchanged clamp(5, 1, 10) = 5; AC2 is split into independent assertions for clamp(0, 1, 10) = 1 and clamp(42, 1, 10) = 10; AC3 maps to the exact Error for clamp(5, 10, 1), providing the negative path. All are observable and agree with the interface and description. Equal-bound, exact-bound, and additional reversed-range checks remain suggested criteria. Both spec-named math files exist and are context files. There are no story dependencies or existing behavior changes. The complete feature exclusion sentence is retained verbatim and echoed in the story scope.",
