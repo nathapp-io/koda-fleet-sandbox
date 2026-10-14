@@ -1,0 +1,52 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "wf-power",
+  "branchName": "feat/wf-power",
+  "createdAt": "2025-01-09T09:00:00.000Z",
+  "updatedAt": "2026-10-14T06:35:12.328Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add a named power(base, exp) export to src/math.ts",
+      "description": "**Goal** — Add a named exported `power(base, exp)` function to `src/math.ts`, next to `add`, that returns `base` raised to `exp` and validates that `exp` is a non-negative integer.\n\n**Motivation** — koda workflow-mode live check A, expected outcome `ready`: the feature exists so power semantics are available and the repo stays green under `bun test` and `bun run typecheck`.\n\n**Approach** — Implement `power` as a small pure function in `src/math.ts`, validating the exponent before computing:\n1. Guard: if `exp` is negative (`exp < 0`) or not an integer (`!Number.isInteger(exp)`), throw `new Error('exp must be a non-negative integer')`.\n2. Otherwise return `Math.pow(base, exp)` (which satisfies `power(5, 0) === 1` and `power(2, 10) === 1024`).\n3. Export it as a named export (`export function power(...)`), matching the project convention of named exports only, no default exports.\n4. Leave `add` and `negate` byte-for-byte unchanged as existing named exports.\n5. Extend the existing `test/math.test.ts` file with a `describe('power', ...)` block containing one test per acceptance criterion below; do not create a new test file.\n\n**Scope** — In: `src/math.ts` (add `power`), `test/math.test.ts` (add power tests). Out: any other math functions; new files outside `src/` and `test/`.\n\n**Interface** —\n```typescript\nexport function power(base: number, exp: number): number\n```\n- `power(base, exp)` returns `base` raised to `exp`.\n- `power(base, exp)` throws `Error('exp must be a non-negative integer')` when `exp` is negative or fractional.",
+      "acceptanceCriteria": [
+        "power(2, 10) returns 1024",
+        "power(5, 0) returns 1",
+        "power(2, -1) throws an Error whose message is 'exp must be a non-negative integer'",
+        "power(2, 1.5) throws an Error whose message is 'exp must be a non-negative integer'",
+        "bun test passes for the math module and bun run typecheck passes on src/ and test/ after the power addition",
+        "add(2, 3) returns 5, unchanged by the addition of power to src/math.ts",
+        "negate(-3) returns 3, unchanged by the addition of power to src/math.ts"
+      ],
+      "tags": [
+        "feature"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Single-file additive change to an existing pure-function module with one straightforward input-validation branch and no new dependencies or cross-module interactions, so simple + tdd-simple (write the failing power tests, then implement power in the same session) is the lightest realistic routing."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts"
+      ],
+      "suggestedCriteria": [
+        "power(3, 3) returns 27",
+        "power(-2, 3) returns -8 when base is negative",
+        "power(2, NaN) throws an Error whose message is 'exp must be a non-negative integer'",
+        "power(2, 0.5) throws an Error whose message is 'exp must be a non-negative integer'"
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Codebase shape: koda-fleet-sandbox is a throwaway TypeScript library used only for koda fleet live checks. Conventions (from .nax/context.md): pure functions in src/, one bun:test file per module in test/, Bun + TypeScript strict, named exports only, no new dependencies. The only module today is src/math.ts (src/math.ts:1-8), which exports add(a, b) -> a + b and negate(n) with a canonical-0 special case. Its only consumer and test surface is test/math.test.ts, which already covers add and negate with describe blocks (test/math.test.ts:1-26). package.json scripts: test = 'bun test', typecheck = 'tsc --noEmit'; tsconfig.json is strict with include ['src','test'] and types ['bun'].\n\nImpact: this feature is purely additive to an existing module: add one named export power(base, exp) to src/math.ts (next to add) and one new describe('power', ...) block in test/math.test.ts. No other source file imports src/math, so there are no downstream call sites to update and no breaking-change surface. The only risks are correctness of the exp validation (must reject both negative and fractional exponents with the exact message 'exp must be a non-negative integer') and the regression anchor that add and negate behave exactly as before (spec requirement 'add and negate are unchanged'), which the existing tests already pin. Nothing in the spec restricts base, so the implementation should not add base validation; Number.isInteger(exp) && exp >= 0 is the correct guard, and Math.pow (or equivalent) covers power(5, 0) === 1 and large exponents. No new dependencies, no new files, no config changes.\n\nArchitecture decision: keep power as a small pure function co-located in src/math.ts per the module convention ('one file per module' maps to one test file test/math.test.ts); do not create a separate module. Implementation order: add the validation-first power function, then extend the existing test file with power cases derived from the spec ACs. Migration path: none needed — additive export in a throwaway sandbox; existing tests are preserved as regression anchors.",
+  "outOfScope": [
+    "Any other math functions, and new files outside `src/` and `test/`."
+  ],
+  "routingProfile": "native-ds+workflow+cheap-0731+koda-job-cmv7q7o19000108pf0smrrmou"
+}
