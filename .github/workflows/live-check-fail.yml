@@ -1,0 +1,11 @@
+# koda workflow-mode live check B: a CI check that always fails, so nax keeps the PR as a draft.
+name: live-check-fail
+on:
+  push:
+    branches: ['feat/wf-clamp']
+  pull_request:
+jobs:
+  fail:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "deliberate failure for the koda workflow-mode live check" && exit 1
