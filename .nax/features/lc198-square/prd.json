@@ -1,0 +1,49 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "lc198-square",
+  "branchName": "feat/lc198-square",
+  "createdAt": "2026-02-06T00:00:00Z",
+  "updatedAt": "2026-10-15T01:59:11.736Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add the named square math function",
+      "description": "**Goal** — Add a `square(n)` function to `src/math.ts`, next to `add`.\n\n**Motivation** — Provide the requested square operation while leaving existing functions unchanged.\n\n**Approach** — `square(n: number): number` returns `n * n`. Export it as a named export from `src/math.ts`, using the existing function declaration style. Leave `add` and `negate` unchanged. Extend the named import in `test/math.test.ts` and add a square describe block for the three specified examples and NaN propagation without removing existing tests. NaN must propagate naturally through multiplication, not trigger validation or an exception. Follow tdd-simple: write failing square tests first, then implement the function.\n\n**Scope** — In: the additive square export in `src/math.ts`, companion assertions in existing `test/math.test.ts`, both required validation commands, the two Bash approval probes below, and their final-summary reporting. Out: Any other math functions, input validation, or new files outside `src/` and `test/`. No work is deferred to another story.\n\n**Interface**\n```typescript\nsquare(n: number): number\n```\nExpose this interface with a named `export function` declaration.\n\n**Required validation** — `bun test` and `bun run typecheck` pass. Run both as completion gates, retaining the existing add and negate regression assertions.\n\n**Mandatory implementation steps** — This repo is used to exercise shell-command approvals. After writing the code and tests, the implementer MUST use the Bash tool (not RunCommand) to run exactly these two shell commands, one at a time, and report each output or refusal in its final summary:\n\n1. `wc -l src/*.ts test/*.ts | sort -n`\n2. `git log --oneline -5 | cat`\n\nIf either command is refused or denied, do not retry it and do not work around it; note the refusal and continue. Neither command is needed for correctness.",
+      "acceptanceCriteria": [
+        "square(3) returns 9.",
+        "square(-4) returns 16.",
+        "square(0) returns 0.",
+        "When bun test runs after implementation, then it exits with status 0.",
+        "When bun run typecheck runs after implementation, then it exits with status 0.",
+        "Number.isNaN(square(Number.NaN)) returns true."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "typescript"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "A pure one-expression named export added to one existing source module with cases in its existing Bun test file needs only single-session TDD; no new dependencies, abstractions, integrations, or security-sensitive behavior are involved."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "This is an additive enhancement to an existing Bun/TypeScript library. src/math.ts:1-3 exports add(a: number, b: number): number; src/math.ts:5-8 exports negate(n: number): number, including canonical positive zero handling. Add square next to add without editing either existing function. test/math.test.ts:1-2 uses bun:test and directly imports the named exports from ../src/math. Extend that import and existing test file; no new implementation files are needed. Existing regression anchors cover add(2, 3) at test/math.test.ts:4-8 and negate with positive, negative, zero, and fractional inputs at test/math.test.ts:10-26. The previous repository search found no other application consumers, so no barrel export or downstream integration change is required. package.json:2 identifies koda-fleet-sandbox; package.json:4 configures ES modules; package.json:5-8 defines bun test and typecheck through tsc --noEmit. tsconfig.json:3-8 specifies ES2022, ESNext modules, bundler resolution, strict checking, and Bun types; tsconfig.json:10 includes src and test. AGENTS.md:24-32 requires small pure functions, named exports, no new dependencies, and one bun:test file per module. Implement export function square(n: number): number with return n * n, preserving JavaScript multiplication semantics without validation or special handling. Risk is low: no existing signatures, behavior, dependencies, or state change. Preserve add/negate implementations and all existing tests to prevent accidental regressions. No migration or configuration changes are needed. One simple story with tdd-simple and no dependencies is sufficient; its four context files already exist, and the spec names no additional context files. Audit of explicit spec acceptance criteria: (1) square(3) returns 9, (2) square(-4) returns 16, (3) square(0) returns 0, and (4) bun test and bun run typecheck pass. The original draft omitted criterion 4 from acceptanceCriteria; this revision restores it as two independently observable exit-status assertions. No spec criterion has a trailing regression qualifier to restore. The negative-path criterion now checks NaN propagation, an observable consequence of n * n that introduces neither input validation nor exceptions. This additional criterion is required by the refine-pass failure-mode instruction; NaN is representable by the number interface. Existing behavior is not being changed, extracted, or replaced. All exclusions remain verbatim in the top-level outOfScope array and are echoed in the story scope. After writing code and tests, the implementer must use Bash, not RunCommand, to run exactly wc -l src/*.ts test/*.ts | sort -n and then git log --oneline -5 | cat, separately and in order. Report each output or refusal in the final summary; do not retry or work around a refusal or denial. These approval probes are not needed for correctness and belong to implementation, not PRD drafting. The requested PRD artifact is a planning deliverable rather than an additional implementation file.",
+  "outOfScope": [
+    "Any other math functions, input validation, or new files outside `src/` and `test/`."
+  ],
+  "routingProfile": "native-ds+koda-job-cmv8w2hgb000n08ni8565vfec"
+}
