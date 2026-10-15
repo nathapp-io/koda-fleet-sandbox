@@ -1,9 +1,27 @@
 import { describe, expect, test } from 'bun:test'
-import { add, negate } from '../src/math'
+import { add, negate, square } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
     expect(add(2, 3)).toBe(5)
+  })
+})
+
+describe('square', () => {
+  test('US-001: square(3) returns 9', () => {
+    expect(square(3)).toBe(9)
+  })
+
+  test('US-001: square(-4) returns 16', () => {
+    expect(square(-4)).toBe(16)
+  })
+
+  test('US-001: square(0) returns 0', () => {
+    expect(square(0)).toBe(0)
+  })
+
+  test('US-001: square propagates NaN', () => {
+    expect(Number.isNaN(square(Number.NaN))).toBe(true)
   })
 })
 
