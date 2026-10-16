@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { add, negate } from '../src/math'
+import { abs, add, negate } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
@@ -22,5 +22,19 @@ describe('negate', () => {
 
   test('AC5: negate(0.5) returns -0.5', () => {
     expect(negate(0.5)).toBe(-0.5)
+  })
+})
+
+describe('abs', () => {
+  test('AC1: abs(5) returns 5', () => {
+    expect(abs(5)).toBe(5)
+  })
+
+  test('AC2: abs(-3) returns 3', () => {
+    expect(abs(-3)).toBe(3)
+  })
+
+  test('AC3: abs(-0) returns canonical positive zero', () => {
+    expect(Object.is(abs(-0), 0)).toBe(true)
   })
 })
