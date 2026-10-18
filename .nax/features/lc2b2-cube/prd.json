@@ -1,0 +1,51 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "lc2b2-cube",
+  "branchName": "feat/lc2b2-cube",
+  "createdAt": "2026-05-05T00:00:00Z",
+  "updatedAt": "2026-10-18T01:50:56.000Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add the named cube arithmetic helper",
+      "description": "**Goal** — Add a `cube(n)` function to `src/math.ts`, next to `add`.\n\n**Motivation** — Provide the requested cubing operation alongside the existing arithmetic helpers.\n\n**Approach** — `cube(n: number): number` returns `n * n * n`. Exported as a named export from `src/math.ts`. `add` and `negate` are unchanged. Follow the existing function declaration style with no additional abstraction or dependency. Extend the named import in `test/math.test.ts` and write failing Bun tests for cube(2), cube(-3), and cube(0), plus NaN propagation, before adding the implementation. Assert NaN propagation with Number.isNaN rather than equality; it follows directly from multiplication and requires no validation branch. Preserve all existing add and negate tests, including canonical positive-zero behavior. Run `bun test` and `bun run typecheck` from the repository root; both must exit successfully.\n\n**Scope** — In: the additive cube implementation in `src/math.ts`, behavioral and regression assertions in the existing `test/math.test.ts`, and execution of both required validation commands. Out: Any other math functions, input validation, or new files outside `src/` and `test/`. No other stories or API changes are needed.\n\n**Interface** — `cube(n: number): number`, exposed as `export function cube(n: number): number` from `src/math.ts`.",
+      "acceptanceCriteria": [
+        "cube(2) returns 8 when imported as a named export from src/math.ts.",
+        "cube(-3) returns -27.",
+        "cube(0) returns 0.",
+        "When bun test runs from the repository root after the cube change, then it exits with status 0.",
+        "When bun run typecheck runs from the repository root after the cube change, then it exits with status 0.",
+        "Number.isNaN(cube(Number.NaN)) returns true when the input is NaN.",
+        "add(2, 3) returns 5, preserving existing behavior unchanged.",
+        "Object.is(negate(0), 0) returns true, preserving existing canonical positive-zero behavior unchanged."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "typescript"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "The production change is one additive arithmetic function in an existing module, with companion tests in the existing Bun test file; direct multiplication and existing patterns need no dependencies, abstractions, or heavier test isolation."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "This is an additive enhancement to an existing TypeScript library. src/math.ts:1-3 exports add(a: number, b: number), implemented as a + b; src/math.ts:5-8 exports negate(n: number), including explicit canonical positive-zero handling. Add cube beside add using a named function export with signature cube(n: number): number and return expression n * n * n. Leave both existing functions unchanged. Only src/math.ts and test/math.test.ts need modification; no new files, dependencies, abstractions, or barrel exports are needed. test/math.test.ts:1-2 imports bun:test and the math functions directly from ../src/math; it is the only math consumer found in the source and test trees. Extend its existing named import with cube. Existing coverage asserts add(2, 3) === 5 at test/math.test.ts:4-8 and negate behavior for positive, negative, canonical positive zero, and fractional inputs at test/math.test.ts:10-26. Preserve those tests. package.json:2 identifies koda-fleet-sandbox, package.json:4 selects ES modules, and package.json:5-8 defines bun test and the tsc --noEmit typecheck script. tsconfig.json:3-8 configures ES2022, ESNext modules, bundler resolution, strict typing, and Bun types; tsconfig.json:10 includes src and test. Match existing function declarations and formatting. Main risks are accidental edits to add or negate, especially negate's zero normalization, and an incorrect cube export. Multiplication must retain ordinary JavaScript number semantics without validation or special handling. Number.NaN propagation supplies an observable failure-input case without expanding the API or introducing validation. The negative-number case also protects the sign of the result. This additive API requires no migration or changes to existing callers and has no security, persistence, or integration implications. One simple story is sufficient; dependencies are empty and all four context files already exist. The spec explicitly identifies src/math.ts, which is included in contextFiles. Acceptance-criterion audit: spec AC1 cube(2) returns 8, AC2 cube(-3) returns -27, and AC3 cube(0) returns 0 are retained individually. Spec AC4 requires bun test and bun run typecheck to pass; both are retained as separate observable successful-exit assertions to preserve the complete spec requirement during this audit. None of the four spec ACs contains a trailing regression qualifier. Additional assertions protect NaN propagation and the explicitly unchanged existing functions. The feature-level out-of-scope sentence is preserved verbatim at top level and echoed in the story scope. Implement with failing tests first, then the minimal function addition, then run both required commands. No validation commands were executed during drafting; baseline success is not asserted.",
+  "outOfScope": [
+    "Any other math functions, input validation, or new files outside `src/` and `test/`."
+  ],
+  "routingProfile": "native-codex+koda-job-cmvd63wyi003b08piqfhd6bal"
+}
