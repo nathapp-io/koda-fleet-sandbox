@@ -1,0 +1,49 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "p3-ask-cube",
+  "branchName": "feat/p3-ask-cube",
+  "createdAt": "2026-10-31T03:27:02Z",
+  "updatedAt": "2026-10-31T03:28:21.136Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add the named cube math function",
+      "description": "**Goal** — Add a `cube(n)` function to `src/math.ts`, next to `add`.\n\n**Motivation** — Provide the requested cube operation while preserving existing exports and exercising the repository's shell-command approval workflow.\n\n**Approach** — `cube(n: number): number` returns `n * n * n`. Exported as a named export from `src/math.ts`. Existing exports are unchanged. Add the function next to add, leaving add and negate untouched. Extend test/math.test.ts using its existing bun:test conventions and import cube directly from ../src/math. Write failing tests for cube(3), cube(-2), and cube(0), then implement the multiplication expression. Preserve every existing add and negate regression test, including negate's positive-zero assertion. No input validation or runtime error path is required.\n\n**Scope** — In: the additive cube export in src/math.ts, its behavioral tests in test/math.test.ts, the required validation commands, and the shell-approval workflow and final reporting below. Out: Any other math functions, input validation, or new files outside `src/` and `test/`. There are no inter-story boundaries.\n\n**Interface** — `cube(n: number): number`\n```typescript\nexport function cube(n: number): number\n```\n\n**Required validation** — `bun test` and `bun run typecheck` pass, each with exit status 0.\n\n**Mandatory implementation workflow** — This repo is used to exercise shell-command approvals. After writing the code and tests,\nthe implementer MUST use the Bash tool (not RunCommand) to run exactly these two shell\ncommands, one at a time, and report each output or refusal in its final summary:\n\n1. `wc -l src/*.ts test/*.ts | sort -n`\n2. `git log --oneline -5 | cat`\n\nIf either command is refused or denied, do not retry it and do not work around it;\nnote the refusal and continue. Neither command is needed for correctness.\n\nVerify the refusal-path acceptance criterion through the tool-call history and final summary; it does not require adding application code, command wrappers, or forcing a denial.",
+      "acceptanceCriteria": [
+        "cube(3) returns 27.",
+        "cube(-2) returns -8.",
+        "cube(0) returns 0.",
+        "When bun test is run after implementation, then it exits with status 0.",
+        "When bun run typecheck is run after implementation, then it exits with status 0.",
+        "When either required Bash command is refused or denied, then the implementer's final summary reports that refusal without retrying the command or working around the denial."
+      ],
+      "tags": [
+        "feature",
+        "math"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "One additive multiplication function in the existing math module with companion tests in its existing test file requires only single-session failing-tests-first implementation; no dependencies, abstractions, security-sensitive behavior, or cross-module integration justify heavier routing."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json",
+        "tsconfig.json",
+        "AGENTS.md"
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "This is an additive enhancement to an existing Bun/TypeScript library, not a greenfield project. src/math.ts:1-3 exports add(a: number, b: number): number using a + b; src/math.ts:5-8 exports negate(n: number): number with explicit positive-zero normalization. Add cube as a named export next to add, returning exactly n * n * n, without changing either existing export. No validation, dependencies, helpers, abstractions, barrel exports, or package changes are required. test/math.test.ts:1-2 imports describe/expect/test from bun:test and imports the existing math exports directly from ../src/math. Existing repository search found this test file as the only math consumer. test/math.test.ts:4-8 tests add(2, 3) = 5; test/math.test.ts:10-26 covers negate for positive, negative, zero (using Object.is), and fractional inputs. Extend the existing import and add a cube describe block with tests for 3, -2, and 0. Retain the existing tests unchanged. No new source or test files are needed. package.json:2 identifies koda-fleet-sandbox; package.json:4 selects ES modules; package.json:5-8 defines bun test and typecheck via tsc --noEmit. tsconfig.json:3-9 sets ES2022, ESNext modules, bundler resolution, strict checking, and Bun types; tsconfig.json:10 includes src and test. AGENTS.md:24-34 requires pure small functions, named exports, no new dependencies, and Bun/strict TypeScript conventions; the previous repository scan found no deeper AGENTS.md. README.md:3-5 describes the disposable runner live-check repository. Impact is limited to src/math.ts and test/math.test.ts. Risk is low and purely additive: preserve add and negate signatures and behavior, particularly negate's canonical positive zero. Use normal JavaScript multiplication semantics without adding special handling for NaN, infinities, overflow, or signed zero. There is no consumer migration, data migration, rollout mechanism, or inter-story prerequisite. One simple story with tdd-simple is sufficient.\n\nRefine audit: .nax/features/p3-ask-cube/spec.md:15-18 states four acceptance criteria: cube(3) returns 27; cube(-2) returns -8; cube(0) returns 0; bun test and bun run typecheck pass. All are now represented in US-001.acceptanceCriteria; the last is split into two observable exit-status assertions so each criterion has one assertion. The explicit refine requirement to preserve every spec AC supersedes the earlier exclusion of quality gates from that array. None of these spec ACs contains a trailing regression qualifier. Existing exports remain unchanged per spec.md:11; this requirement is retained in the description and existing regression tests, and the feature changes no existing behavior. The spec defines no runtime failure modes or input validation. For the required negative-path criterion, use its actual command-refusal path (spec.md:29-30), not an invented runtime exception: report a denied command without retrying or working around it. Inspect tool-call history and the implementer's final summary to verify this workflow criterion. The implementation must use Bash, not RunCommand, after writing code and tests, executing wc -l src/*.ts test/*.ts | sort -n and then git log --oneline -5 | cat separately, and report each output or refusal (spec.md:20-30). Neither command establishes correctness. No spec Context Files section exists; the five contextFiles are existing relevant files, including both affected files, and no created files appear there. There is one story with no dependencies or unresolved story references. The feature-level exclusion from spec.md:34 is preserved verbatim in top-level outOfScope and echoed in the story scope. The requested PRD artifact is a planning deliverable, not a new implementation file outside src/ or test/. This planning pass does not implement cube or execute implementation-stage commands.",
+  "outOfScope": [
+    "Any other math functions, input validation, or new files outside `src/` and `test/`."
+  ],
+  "routingProfile": "native-ds+koda-job-cmvvub2xm000107o3j0y683c2"
+}
