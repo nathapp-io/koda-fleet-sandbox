@@ -1,9 +1,23 @@
 import { describe, expect, test } from 'bun:test'
-import { add, negate } from '../src/math'
+import { add, cube, negate } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
     expect(add(2, 3)).toBe(5)
+  })
+})
+
+describe('cube', () => {
+  test('AC-1: cube(3) returns 27', () => {
+    expect(cube(3)).toBe(27)
+  })
+
+  test('AC-2: cube(-2) returns -8', () => {
+    expect(cube(-2)).toBe(-8)
+  })
+
+  test('AC-3: cube(0) returns 0', () => {
+    expect(cube(0)).toBe(0)
   })
 })
 
