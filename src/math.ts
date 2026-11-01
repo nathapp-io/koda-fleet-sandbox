@@ -10,3 +10,7 @@ export function negate(n: number): number {
 export function clamp(n: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, n))
 }
+
+export function ratio(a: number, b: number): number {
+  return a / b
+}

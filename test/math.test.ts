@@ -24,3 +24,15 @@ describe('negate', () => {
     expect(negate(0.5)).toBe(-0.5)
   })
 })
+
+import { clamp, ratio } from "../src/math"
+
+test("clamp bounds the value", () => {
+  expect(clamp(5, 0, 3)).toBe(3)
+  expect(clamp(-1, 0, 3)).toBe(0)
+  expect(clamp(2, 0, 3)).toBe(2)
+})
+
+test("ratio divides", () => {
+  expect(ratio(6, 3)).toBe(2)
+})
