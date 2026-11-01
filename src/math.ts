@@ -9,5 +9,5 @@ export function negate(n: number): number {
 
 /** Returns a minus b. */
 export function subtract(a: number, b: number): number {
-  return b - a
+  return a - b
 }

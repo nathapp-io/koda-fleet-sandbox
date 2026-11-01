@@ -1,9 +1,28 @@
 import { describe, expect, test } from 'bun:test'
-import { add, negate } from '../src/math'
+import { add, negate, subtract } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
     expect(add(2, 3)).toBe(5)
+  })
+})
+
+describe('subtract', () => {
+  test('subtracts unequal operands in the given order', () => {
+    expect(subtract(5, 2)).toBe(3)
+    expect(subtract(2, 5)).toBe(-3)
+  })
+
+  test('subtracts negative numbers', () => {
+    expect(subtract(-5, -2)).toBe(-3)
+    expect(subtract(5, -2)).toBe(7)
+    expect(subtract(-5, 2)).toBe(-7)
+  })
+
+  test('handles zero in either position', () => {
+    expect(subtract(5, 0)).toBe(5)
+    expect(subtract(0, 5)).toBe(-5)
+    expect(subtract(0, 0)).toBe(0)
   })
 })
 
