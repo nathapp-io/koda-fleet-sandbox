@@ -18,3 +18,7 @@ export function ratio(a: number, b: number): number {
 export function safeDivide(a: number, b: number): number {
   return a / b
 }
+
+export function isNegative(n: number): boolean {
+  return n <= 0
+}
