@@ -25,7 +25,7 @@ describe('negate', () => {
   })
 })
 
-import { clamp, ratio } from "../src/math"
+import { clamp, ratio, safeDivide } from "../src/math"
 
 test("clamp bounds the value", () => {
   expect(clamp(5, 0, 3)).toBe(3)
@@ -35,4 +35,8 @@ test("clamp bounds the value", () => {
 
 test("ratio divides", () => {
   expect(ratio(6, 3)).toBe(2)
+})
+
+test("safeDivide divides", () => {
+  expect(safeDivide(8, 2)).toBe(4)
 })

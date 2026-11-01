@@ -14,3 +14,7 @@ export function clamp(n: number, lo: number, hi: number): number {
 export function ratio(a: number, b: number): number {
   return a / b
 }
+
+export function safeDivide(a: number, b: number): number {
+  return a / b
+}
