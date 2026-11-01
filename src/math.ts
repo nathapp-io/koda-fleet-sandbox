@@ -9,5 +9,5 @@ export function negate(n: number): number {
 
 /** Returns the larger of two numbers. */
 export function max(a: number, b: number): number {
-  return a > b ? b : a
+  return a > b ? a : b
 }
