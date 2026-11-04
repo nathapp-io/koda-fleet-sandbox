@@ -1,5 +1,23 @@
 import { describe, expect, test } from 'bun:test'
-import { add, negate } from '../src/math'
+import { add, double, negate } from '../src/math'
+
+describe('double', () => {
+  test('AC-1: doubles a positive number', () => {
+    expect(double(3)).toBe(6)
+  })
+
+  test('AC-2: doubles a negative number', () => {
+    expect(double(-4)).toBe(-8)
+  })
+
+  test('AC-3: doubles zero', () => {
+    expect(double(0)).toBe(0)
+  })
+
+  test('AC-6: preserves NaN', () => {
+    expect(Number.isNaN(double(Number.NaN))).toBe(true)
+  })
+})
 
 describe('add', () => {
   test('adds two numbers', () => {
