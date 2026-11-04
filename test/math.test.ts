@@ -1,9 +1,27 @@
 import { describe, expect, test } from 'bun:test'
-import { add, negate } from '../src/math'
+import { add, negate, triple } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
     expect(add(2, 3)).toBe(5)
+  })
+})
+
+describe('triple', () => {
+  test('AC-1: triple(3) returns 9', () => {
+    expect(triple(3)).toBe(9)
+  })
+
+  test('AC-2: triple(-4) returns -12', () => {
+    expect(triple(-4)).toBe(-12)
+  })
+
+  test('AC-3: triple(0) returns 0', () => {
+    expect(triple(0)).toBe(0)
+  })
+
+  test('AC-6: triple(NaN) returns NaN', () => {
+    expect(Number.isNaN(triple(Number.NaN))).toBe(true)
   })
 })
 
