@@ -1,0 +1,51 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "fpf-double",
+  "branchName": "feat/fpf-double",
+  "createdAt": "2026-06-05T00:00:00Z",
+  "updatedAt": "2026-11-04T10:31:51.051Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add the double named export to the math module",
+      "description": "**Goal** — Add a `double(n)` function to `src/math.ts`, next to `add`.\n\n**Motivation** — Provide the requested operation for returning twice a supplied number.\n\n**Approach** — Export `double` as a named function from `src/math.ts` whose body returns `n * 2`. Keep `add` and `negate` unchanged, including negate's existing canonical positive-zero handling. Use native multiplication without validation: a NaN input therefore returns NaN. Extend the existing named import in `test/math.test.ts` and add double examples for 3, -4, 0, and NaN using the established bun:test style; retain the existing add and negate tests. Write the new behavioral tests first, then implement the function. Verify NaN with Number.isNaN or an equivalent NaN-aware assertion. Completion requires `bun test` and `bun run typecheck` to exit with status 0.\n\n**Scope** — In: the additive function in `src/math.ts`, its behavioral tests and existing regression examples in `test/math.test.ts`, and execution of the existing test and typecheck commands. Out: Any other math functions, input validation, or new files outside `src/` and `test/`.\n\n**Interface** — `double(n: number): number`, exposed as `export function double(n: number): number` from `src/math.ts`.",
+      "acceptanceCriteria": [
+        "double(3) returns 6.",
+        "double(-4) returns -8.",
+        "double(0) returns 0.",
+        "When bun test runs from the repository root after implementation, then it exits with status 0.",
+        "When bun run typecheck runs from the repository root after implementation, then it exits with status 0.",
+        "double(n) returns NaN when n is NaN.",
+        "add(2, 3) returns 5, preserving existing behavior.",
+        "negate(0) returns canonical positive zero, preserving existing behavior."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "typescript"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "A single additive source function and companion examples in the existing Bun test file require only failing-tests-first implementation in one session, with no dependencies, abstractions, integrations, or security-sensitive behavior."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "This is an additive enhancement to the existing Bun/TypeScript library. src/math.ts:1-3 defines the named export add(a: number, b: number); src/math.ts:5-8 defines negate(n: number), with deliberate canonical positive-zero handling at src/math.ts:6. Add the named export double(n: number): number adjacent to add, returning exactly n * 2, without modifying either existing function. Only src/math.ts and the existing test/math.test.ts need implementation changes. test/math.test.ts:1-2 imports bun:test and the math functions directly; it is the existing consumer identified in the source/test trees. Extend that import and add a describe block for double. Preserve add's existing example at test/math.test.ts:4-8 and all negate examples at test/math.test.ts:10-26, covering positive, negative, zero, and fractional values. No new helper, module, dependency, barrel export, or configuration is needed. AGENTS.md:23-32 requires small pure functions, named exports, strict TypeScript, Bun tests, and no new dependencies. package.json:2 identifies koda-fleet-sandbox, package.json:4 declares ESM, and package.json:5-8 defines the test and typecheck commands. tsconfig.json:2-9 configures ES2022, ESNext modules, bundler resolution, strict mode, and Bun types; tsconfig.json:10 already includes src and test. Use one simple tdd-simple story: write failing examples in the existing test file, implement the export, and run the existing suite and typecheck. Spec AC audit: (1) double(3) returns 6, (2) double(-4) returns -8, (3) double(0) returns 0, and (4) bun test and bun run typecheck pass. All four are preserved below; the fourth is split into independently observable command exit-status assertions, as explicitly required by this refinement. None has a trailing qualifying clause to preserve. The added negative-path criterion uses NaN, whose result follows directly from native n * 2 arithmetic; it requires no validation or exception policy. Existing add and negate behavior receives explicit regression anchors as well as preservation of the full existing tests. This is backward-compatible and needs no migration or caller changes. The main risk is accidentally altering add or negate, especially negate's zero handling; leave those implementations untouched. Context files all already exist, no new implementation files are expected, and there are no story dependencies. The feature-level out-of-scope sentence is retained verbatim and echoed in the story scope. No test or typecheck execution is claimed by this planning document.",
+  "outOfScope": [
+    "Any other math functions, input validation, or new files outside `src/` and `test/`."
+  ],
+  "routingProfile": "native-codex+koda-job-cmw1z6nsp005608t9m06hbzh4"
+}
