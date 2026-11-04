@@ -1,0 +1,49 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "fpf-square",
+  "branchName": "feat/fpf-square",
+  "createdAt": "2026-02-20T00:00:00Z",
+  "updatedAt": "2026-11-04T09:44:00.405Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add the named square export alongside add",
+      "description": "**Goal** — Add a `square(n)` function to `src/math.ts`, next to `add`.\n\n**Motivation** — Provide the requested squaring operation without changing the existing `add` and `negate` API or behavior.\n\n**Approach** — Implement `square(n: number): number` as a named export returning `n * n`, matching the module's existing pure-function style. Leave `add` and `negate` unchanged, including negate's canonical positive zero. Extend the named import and add a square test group in the existing `test/math.test.ts`. Write failing tests for 3, -4, 0, and NaN before implementation. The NaN case must follow ordinary multiplication semantics and return NaN; do not add validation or special handling. Retain all existing add and negate tests. Run `bun test` and `bun run typecheck`; both commands must exit with code 0.\n\n**Scope** — In: the new export in `src/math.ts`, its tests in `test/math.test.ts`, preservation of existing tests and behavior, and both validation commands. Out: Any other math functions, input validation, or new files outside `src/` and `test/`. No other stories or integration changes are needed.\n\n**Interface** — `square(n: number): number`, exported as a named export from `src/math.ts`.",
+      "acceptanceCriteria": [
+        "square(3) returns 9.",
+        "square(-4) returns 16.",
+        "square(0) returns 0.",
+        "When bun test runs from the repository root, then the process exits with code 0.",
+        "When bun run typecheck runs from the repository root, then the process exits with code 0.",
+        "square(NaN) returns NaN."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "typescript"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "A direct multiplication export in one existing source module plus tests in its existing test file requires no new abstraction or dependency; lightweight failing-tests-first implementation is sufficient."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Existing-code enhancement: src/math.ts:1-3 exports add(a: number, b: number): number, and src/math.ts:5-8 exports negate(n: number): number with an explicit canonical-positive-zero branch. Add the named export square(n: number): number beside add, returning n * n; leave both existing implementations unchanged. test/math.test.ts:1-2 imports bun:test and the math module directly. It is the only math consumer identified by repository search; no barrel export or production integration changes are needed. Extend its existing named import and add square tests in the same file. Existing regression tests assert add(2, 3) = 5 at test/math.test.ts:4-8 and negate behavior for positive, negative, zero, and fractional values at test/math.test.ts:10-26. Retain these assertions, particularly Object.is(negate(0), 0), which protects positive zero. package.json:2 names the project; package.json:4-8 establishes ESM and scripts for bun test and tsc --noEmit. tsconfig.json:3-10 establishes ES2022, ESNext modules, bundler resolution, strict checking, Bun types, and inclusion of src and test. AGENTS.md:23-32 requires pure small functions, named exports, one bun:test file per module, and no new dependencies; no deeper AGENTS.md was found. Only src/math.ts and test/math.test.ts need implementation changes. No new files, helpers, abstractions, dependencies, validation, or configuration edits are needed. JavaScript multiplication semantics apply, including NaN propagation, floating-point rounding, and overflow; no special handling should be introduced. This additive API has low compatibility risk; accidental changes to add or negate are the main regression risk. No migration, data changes, deployment sequencing, or downstream adaptation is needed. One simple tdd-simple story is sufficient, with no dependencies. Audit of spec acceptance criteria: (1) square(3) returns 9, (2) square(-4) returns 16, and (3) square(0) returns 0 are retained verbatim in substance; (4) bun test and bun run typecheck pass is restored in acceptanceCriteria as two independently observable successful process exits, following the refine request to preserve every spec AC. None of the original ACs contains a trailing regression qualifier. The additional square(NaN) criterion supplies the requested negative-path assertion without adding validation or exception behavior: direct multiplication naturally propagates NaN. The spec lists no failure-handling table. The change is additive and does not replace or alter existing behavior; existing regression tests remain mandatory. Both spec-relevant existing files, src/math.ts and test/math.test.ts, are included in contextFiles alongside the command and compiler configuration. There are no new file outputs and no inter-story dependency edges. The single feature-level exclusion is preserved verbatim in outOfScope and echoed in the story scope. The requested PRD artifact is planning output; the feature's source/test restriction governs implementation changes.",
+  "outOfScope": [
+    "Any other math functions, input validation, or new files outside `src/` and `test/`."
+  ],
+  "routingProfile": "native-codex+koda-job-cmw1xh0oo000x08t9c3pxbcib"
+}
