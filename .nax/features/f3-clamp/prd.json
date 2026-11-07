@@ -1,0 +1,59 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "f3-clamp",
+  "branchName": "feat/f3-clamp",
+  "createdAt": "2025-09-25T00:00:00.000Z",
+  "updatedAt": "2026-11-07T09:28:38.467Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add clamp(n, min, max) to src/math.ts with zero-sign canonicalisation",
+      "description": "**Goal** — Add a `clamp(n, min, max)` function to `src/math.ts`, next to `add` and `negate`, with tests in `test/math.test.ts`.\n\n**Motivation** — The sandbox library exposes small pure math helpers (`add`, `negate`); `clamp` completes the trio and must obey the same strict no-negative-zero convention that `negate` already enforces at `src/math.ts:6`.\n\n**Approach** — Requirements, verbatim from the spec:\n\n- `clamp(n: number, min: number, max: number): number` returns `min` when `n < min`, `max` when `n > max`, and `n` otherwise.\n- A zero result is always positive zero (`0`, never `-0`), whichever of `n`, `min` or `max` it came from.\n- When `min > max`, it throws a `RangeError` with the message `min must not exceed max`, before any clamping.\n- Exported as a named export from `src/math.ts`.\n- `add` and `negate` are unchanged.\n- Tests go in `test/math.test.ts`.\n\nDesign notes / implementation order:\n\n1. Guard first, before any clamping: `if (min > max) throw new RangeError('min must not exceed max')`. Use exactly that error class and exactly that message string. A `min === max` window is legal and must not throw (`0 > 0` is false). `-0 > 0` is also false, so a window such as `(-0, 0)` or `(-10, -0)` is legal.\n2. Compute the clamp with strict comparisons only — `n < min` returns `min`, else `n > max` returns `max`, else returns `n`. Do not use `<=`/`>=` and do not use `Math.min`/`Math.max`: `Math.min`/`Math.max` pick `-0` in ways that would break the zero rule.\n3. Canonicalise the sign of zero at the single return point, mirroring `negate` (`if (n === 0) return 0` at `src/math.ts:6`): compute the result, then `result === 0 ? 0 : result`. This covers all three sources of zero — the input `n` (e.g. `clamp(-0, 0, 10)`), `min` (e.g. `clamp(-5, -0, 0)` returns `min`, which is `-0`), and `max` (e.g. `clamp(5, -10, -0)` returns `max`, which is `-0`).\n\nStyle: keep it a small pure function with a named `export function` declaration (no default export), consistent with `add`/`negate` in `src/math.ts`. Do not reorder or edit the existing `add` and `negate` implementations.\n\nTests: add a `describe('clamp', ...)` block to `test/math.test.ts`, importing `clamp` alongside the existing `add, negate` in the `../src/math` import. Follow the existing file's conventions: test names prefixed with the acceptance-criterion id (e.g. `AC1: clamp(5, 0, 10) returns 5`), `expect(...).toBe(...)` for value equality, and `expect(Object.is(x, 0)).toBe(true)` for the zero-sign assertions. For the throwing case use `expect(() => clamp(1, 2, 1)).toThrow(new RangeError('min must not exceed max'))` or `toThrow(/min must not exceed max/)` plus an explicit class/message assertion.\n\n**Scope** — In: the `clamp` export in `src/math.ts`; its `describe` block in `test/math.test.ts`. Out: changes to `add` or `negate`; any other math function; NaN/Infinity handling; any new file outside `src/` and `test/`.\n\n**Interface**\n\n```typescript\nexport function clamp(n: number, min: number, max: number): number\n```",
+      "acceptanceCriteria": [
+        "clamp(5, 0, 10) returns 5.",
+        "clamp(-1, 0, 10) returns 0.",
+        "clamp(11, 0, 10) returns 10.",
+        "clamp(0, 0, 0) returns 0.",
+        "clamp(1, 2, 1) throws a RangeError with message `min must not exceed max`.",
+        "Object.is(clamp(-0, 0, 10), 0) is true.",
+        "Object.is(clamp(-5, -0, 0), 0) is true.",
+        "Object.is(clamp(5, -10, -0), 0) is true."
+      ],
+      "tags": [
+        "feature",
+        "math"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Single-file additive change (one new pure function) plus tests in the existing test file; standard pattern already established by `negate` (including its zero-sign handling); no new abstractions, dependencies, or cross-module impact."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json"
+      ],
+      "suggestedCriteria": [
+        "clamp(10, 3, 3) returns 3 and does not throw when min equals max.",
+        "clamp(5, 5, 10) returns 5 (input equal to min is returned unchanged).",
+        "clamp(10, 0, 10) returns 10 (input equal to max is returned unchanged).",
+        "clamp(2.5, 0, 10) returns 2.5 (a fractional input inside the range passes through unchanged).",
+        "clamp(-0.5, -1, 1) returns -0.5 with its sign preserved.",
+        "clamp(-0, -0, 0) returns positive zero: Object.is(clamp(-0, -0, 0), 0) is true."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Codebase is tiny and fully mapped: only two source files exist — `src/math.ts` (8 lines) and `test/math.test.ts` (26 lines).\n\n`src/math.ts:1-3` defines `add(a, b)`. `src/math.ts:5-8` defines `negate(n)`, and it already establishes the house precedent for zero canonicalisation: `if (n === 0) return 0` before negating, so `negate(0)` is `+0` and never `-0`. `clamp` must follow the same convention, generalised to any value that is numerically zero (whether it came from `n`, `min`, or `max`).\n\nExports are plain named `export function` declarations (AGENTS.md: named exports, no default exports; strict TS; pure, small functions; no new dependencies). There is no barrel/index file, no build step, and no other module imports `src/math.ts`, so adding an export is purely additive with zero backward-compatibility risk — `add` and `negate` cannot be affected by a new sibling export.\n\n`test/math.test.ts:1` imports `{ add, negate }` from `../src/math` and uses `bun:test` (`describe`/`expect`/`test`). Conventions to mirror: one `describe` per function, test names prefixed with the acceptance-criterion id (e.g. `AC3: negate(0) returns canonical positive zero`), and zero-sign assertions written as `expect(Object.is(value, 0)).toBe(true)` (see `test/math.test.ts:22-24`). The existing `add`/`negate` tests must keep passing untouched.\n\nImplementation notes for `clamp(n, min, max)`:\n1. Validate BEFORE any clamping: `if (min > max) throw new RangeError('min must not exceed max')`. Exact message, exact error class. Note `-0 > 0` is `false`, so a `(-0, 0)` or `(0, -0)` window is legal and must NOT throw (AC7/AC8 rely on this).\n2. Compute the clamp with strict `<` / `>` comparisons: `n < min ? min : n > max ? max : n`. `-0 < 0` and `-0 > 0` are both false, so a `-0` argument falls into the pass-through branch.\n3. Canonicalise the zero sign at the single return point — `const r = ...; return r === 0 ? 0 : r` (or `r + 0`, but the explicit comparison mirrors `negate`). This is what makes AC6 (`clamp(-0, 0, 10)`), AC7 (`clamp(-5, -0, 0)` → `min` is `-0`) and AC8 (`clamp(5, -10, -0)` → `max` is `-0`) all return `+0`. Missing this step silently fails AC6-AC8 while AC1-AC5 still pass, so it is the single highest-risk detail of this feature.\n4. `clamp(0, 0, 0)` returns `+0` with no throw (`0 > 0` is false), satisfying AC4.\n\nRisks: (a) forgetting zero canonicalisation; (b) throwing on a `min === max` window — `min > max` is the only invalid condition; (c) validating after clamping instead of before; (d) using `<=`/`>=` and thereby short-circuiting the pass-through branch; (e) using `Math.min`/`Math.max`, which propagate `-0` inconsistently and would break the zero rule. NaN and Infinity are explicitly out of scope — do not add guards for them. Verification: `bun test` and `bun run typecheck` (both automated by the pipeline).",
+  "outOfScope": [
+    "Other math functions.",
+    "NaN or Infinity handling.",
+    "New files outside `src/` and `test/`."
+  ],
+  "routingProfile": "koda-job-cmw67a1bo003j08p2u0tjldy8"
+}
