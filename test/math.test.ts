@@ -30,6 +30,12 @@ describe('clamp', () => {
     )
   })
 
+  test('rejects inverted bounds before handling NaN n', () => {
+    const clampWithInvertedBounds = () => clamp(NaN, 10, 0)
+    expect(clampWithInvertedBounds).toThrow(RangeError)
+    expect(clampWithInvertedBounds).toThrow(/^min must not exceed max$/)
+  })
+
   test('AC-6: normalizes a selected negative zero n', () => {
     expect(Object.is(clamp(-0, 0, 10), 0)).toBe(true)
   })
