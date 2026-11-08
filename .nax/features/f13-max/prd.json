@@ -1,0 +1,67 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "f13-max",
+  "branchName": "feat/f13-max",
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2026-11-08T17:39:33.996Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add max2(a, b) named export with M-AC unit tests",
+      "description": "**Goal** — Add a `max2(a, b)` function to `src/math.ts`, next to `add` and `negate`, for integer inputs, and cover it with a new `describe('max2', ...)` block in `test/math.test.ts`.\n\n**Motivation** — The library currently exposes only `add` and `negate`; `max2` extends it with the smallest pure two-argument integer helper, following the existing one-function-per-`describe` pattern.\n\n**Approach** —\n- In `src/math.ts`, append a third named export after `negate`. Keep it to a single expression: `a >= b ? a : b`. No helper functions, no additional branching, no default export.\n- Signature must carry an explicit return type (`: number`) — `strict` mode does not require it, so write it by hand.\n- Do not touch the `add` or `negate` bodies; the file uses no semicolons and 2-space indent, 4-space continuation inside functions — match that style.\n- In `test/math.test.ts`, extend the existing import line to `import { add, max2, negate } from '../src/math'` (or add `max2` to it) and append a new `describe('max2', () => { ... })` block after the `negate` block. Every `test` inside it must be named with the `M-AC<n>:` prefix, e.g. `test('M-AC1: max2(3, 7) returns 7', ...)`. Use `bun:test`'s `expect(...).toBe(...)` consistent with the existing tests.\n- Note: the existing 'add' block uses an unprefixed name and the 'negate' block uses bare `AC<n>:`; the new block intentionally uses the `M-AC<n>:` prefix — do not rename existing tests.\n\n**Interface**\n```typescript\n// src/math.ts (existing exports kept unchanged, new export appended)\nexport function add(a: number, b: number): number\nexport function negate(n: number): number\nexport function max2(a: number, b: number): number\n```\n\n**Scope** — In: adding `max2` to `src/math.ts`; adding its `describe('max2', ...)` test block to `test/math.test.ts`. Out: the signed-zero / `NaN` / `Infinity` cases (see outOfScope); any other math function; any change to `add`/`negate`; any new file; the `.nax/config.json` `e2e` gate.",
+      "acceptanceCriteria": [
+        "max2(3, 7) returns 7.",
+        "max2(7, 3) returns 7.",
+        "max2(-2, -5) returns -2.",
+        "max2(4, 4) returns 4.",
+        "max2 is exported as a named export from src/math.ts, so that `import { max2 } from '../src/math'` resolves to the max2 function; its declared return type is explicitly `number`.",
+        "When max2 is added to src/math.ts, the existing exports are unchanged: add(2, 3) still returns 5 and negate(5) still returns -5."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "unit-test"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Purely additive single-module change: one new pure two-argument function plus one new describe block in the existing test file. No new dependencies, no abstractions, no cross-module impact, no security concerns."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "suggestedCriteria": [
+        "max2(0, 0) returns 0.",
+        "max2(-1, 0) returns 0.",
+        "max2(Number.MAX_SAFE_INTEGER, 1) returns Number.MAX_SAFE_INTEGER.",
+        "max2(5, 5) returns 5 (a tie returns the first argument, observable when both arguments are equal)."
+      ],
+      "outOfScope": [
+        "Non-integer inputs (`NaN`, `Infinity`), and signed zero (`-0` vs `0`) — do not assert or implement any behaviour for them.",
+        "Other math functions.",
+        "Changes to existing exports (`add`, `negate`) or existing test names.",
+        "New files outside `src/` and `test/`.",
+        "The `e2e` quality command in `.nax/config.json`."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Codebase is a minimal single-module TypeScript library (Bun, strict TS, ESM, \"type\": \"module\").\n\nExisting code:\n- src/math.ts:8 — exactly two named exports, `add(a, b): number` (returns a + b) and `negate(n): number` (returns 0 for n === 0, else -n). No default export, no index/barrel file, no other src modules (src/ contains only math.ts).\n- test/math.test.ts:26 — one `bun:test` file, one `describe` block per function ('add', 'negate'), `test` names carry an AC-n prefix ('AC1: negate(5) returns -5'). Imports are `import { add, negate } from '../src/math'` (no .ts extension, relative path from test/).\n- package.json — scripts: `test` = `bun test`, `typecheck` = `tsc --noEmit`; devDependencies only @types/bun + typescript. No lint script, no test runner config (bun auto-discovers test/*.test.ts).\n- tsconfig.json — strict: true, target ES2022, module ESNext, moduleResolution bundler, types: [\"bun\"], include: [\"src\", \"test\"]. Because `include` covers both roots, any type error in either file fails `bun run typecheck`.\n\nImpact analysis:\n- Only two files change: src/math.ts (append one function) and test/math.test.ts (append one describe block + extend the existing import statement). Both are additions; no existing line needs to be rewritten.\n- Dependents: test/math.test.ts is the sole importer of src/math.ts (grep shows no other consumers, no barrel/index.ts). There is no public package entry point, so no API surface beyond the module itself.\n- Risks: (1) accidental edit of `add`/`negate` bodies — must stay byte-for-byte semantically identical; (2) the spec asks for an *explicit* return type, which strict mode does not require and tsc will not flag if omitted — it must be written by hand as `: number`; (3) test names must use the `M-AC<n>:` prefix inside a new `describe('max2', ...)` block — the existing 'add' block uses a plain name and 'negate' uses bare `AC<n>:`, so the new block deliberately differs; (4) signed zero: `max2(-0, 0)` would return `-0` under `a >= b ? a : b`, which is explicitly out of scope and must NOT be asserted; (5) the sandbox `.nax/config.json` `e2e` gate is a koda-flow harness artifact, not part of this feature — do not modify it.\n- Migration/rollback: none needed — purely additive, backward compatible, no dependency or config changes.\n\nArchitecture decision: keep the module flat and pure (no helpers, no branching beyond the single ternary), mirror the existing one-function-per-`describe` test layout, and extend the existing import line in test/math.test.ts rather than introducing a new import statement style. Implementation order: one story covers both files since the function and its tests are trivially coupled and the whole change is ~10 lines.",
+  "outOfScope": [
+    "Non-integer inputs (`NaN`, `Infinity`, signed zero).",
+    "Non-integer inputs (`NaN`, `Infinity`), and signed zero (`-0` vs `0`).",
+    "Other math functions.",
+    "Changes to existing exports.",
+    "New files outside `src/` and `test/`.",
+    "The `e2e` quality command in `.nax/config.json` (a sandbox gate for the koda flow live check; not part of this feature)."
+  ],
+  "routingProfile": "koda-job-cmw849jy9002208tgvzgkt181"
+}
