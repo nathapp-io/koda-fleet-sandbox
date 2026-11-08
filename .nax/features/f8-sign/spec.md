@@ -27,3 +27,9 @@ Add a `sign(n)` function to `src/math.ts`, next to `add` and `negate`.
 - Other math functions.
 - Changes to `add` or `negate`.
 - New files outside `src/` and `test/`.
+
+## Flow's calls
+
+### PRD_REVIEW job cmw7ctl3y00c708qegzcc425t
+
+- **P9-dup-name-rationale** (minor): US-001.description justifies the `S-AC<n>:` test-name prefix with a false claim that bun:test collides on duplicate test names; names are namespaced by describe (verified: 2 pass with duplicate 'AC1: dup' in two describes), though the instruction itself matches the spec's mandated prefix. Call: Keep step 6's prefix instruction as written; if the PRD is regenerated, replace 'bun:test identifies tests by name, so unprefixed names would collide' with a statement that the prefix is the naming convention the spec mandates.
