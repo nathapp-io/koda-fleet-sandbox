@@ -32,3 +32,7 @@ Add a `max2(a, b)` function to `src/math.ts`, next to `add` and `negate`, for in
 ### SPEC_REVIEW job cmw840jxc000a08tg2ou6s28h
 
 - **f13-signed-zero-mislabel** (minor): The Requirements and Out-of-scope bullets classify signed zero as a "non-integer input", though -0 is an integer and the same Requirements line says inputs are integers. Call: Reword Out-of-scope bullet 1 to "Non-integer inputs (`NaN`, `Infinity`), and signed zero (`-0` vs `0`)."
+
+### PRD_REVIEW job cmw84atlf002x08tgjgfbtrij
+
+- **prd-oos-duplicate** (minor): PRD feature-level outOfScope keeps both the pre-call and post-call versions of the signed-zero bullet, and the story-level e2e bullet lost its "not part of this feature" parenthetical. Call: Delete the stale first feature-level outOfScope entry ("Non-integer inputs (`NaN`, `Infinity`, signed zero).") so only the amended "...and signed zero (`-0` vs `0`)." bullet remains, and restore the e2e parenthetical "(a sandbox gate for the koda flow live check; not part of this feature)".
