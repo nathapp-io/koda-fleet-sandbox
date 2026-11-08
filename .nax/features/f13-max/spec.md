@@ -26,3 +26,9 @@ Add a `max2(a, b)` function to `src/math.ts`, next to `add` and `negate`, for in
 - Changes to existing exports.
 - New files outside `src/` and `test/`.
 - The `e2e` quality command in `.nax/config.json` (a sandbox gate for the koda flow live check; not part of this feature).
+
+## Flow's calls
+
+### SPEC_REVIEW job cmw840jxc000a08tg2ou6s28h
+
+- **f13-signed-zero-mislabel** (minor): The Requirements and Out-of-scope bullets classify signed zero as a "non-integer input", though -0 is an integer and the same Requirements line says inputs are integers. Call: Reword Out-of-scope bullet 1 to "Non-integer inputs (`NaN`, `Infinity`), and signed zero (`-0` vs `0`)."
