@@ -32,3 +32,9 @@ Add a `max2(a, b)` function to `src/math.ts`, next to `add` and `negate`, for in
 ### SPEC_REVIEW job cmw7sewsn005308mfd9bh88y6
 
 - **m-ac-numbering** (minor): The `M-AC<n>:` test-name prefix on line 13 is unanchored, and the prior near-identical spec's recorded `SPEC_REVIEW` call plus the f10-max PRD (5 spec ACs → 7 planned story ACs) show `nax plan` renumbers/extends ACs, so the implementer again cannot tell whether n is the spec's 1–4 or the planned story's numbering. Call: Reword line 13 to "test names are prefixed `M-AC<n>:`, where `<n>` is this spec's acceptance-criterion number (1–4)".
+
+### PRD_REVIEW job cmw7slblw006v08mfgb1hjxo8
+
+- **analysis-describe-count** (minor): PRD `analysis` says `test/math.test.ts` has three `describe` blocks; it has two (`add`, `negate`) — inert field, no run impact. Call: Correct "three `describe` blocks: `add`, `negate`" to two in prd.json `analysis` (or leave it; the field is rendered into no prompt).
+- **suggested-criteria-advisory** (answered): `suggestedCriteria` holds two assertions not in the spec, but it is the planner's advisory channel (not `acceptanceCriteria`) per the spec-writing guide, both evaluate correctly under the pinned ternary, so it is not scope bleed. Call: No change — keep them out of `acceptanceCriteria`; if a hardening pass later promotes them, extend the description's `M-AC<n>` mapping to name the new tests.
+- **extra-context-files** (answered): `package.json` and `tsconfig.json` were added to `contextFiles` beyond the spec's two touched files — checklist §4d grades extra existing files a minor, and both are genuinely relevant. Call: No change — keep them; they supply the `bun test`/`tsc --noEmit` scripts and the strict/moduleResolution settings the story depends on.
