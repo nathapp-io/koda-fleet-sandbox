@@ -1,0 +1,63 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "f11-max",
+  "branchName": "feat/f11-max",
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-11-08T12:11:37.928Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add max2(a, b) to src/math.ts with M-AC1..M-AC4 tests",
+      "description": "**Goal** — Add a `max2(a: number, b: number): number` named export to `src/math.ts` (next to `add` and `negate`) plus a new `describe('max2', ...)` block in `test/math.test.ts` covering acceptance criteria 1–4.\n\n**Motivation** — The library needs a two-integer maximum helper, implemented in the spec-pinned ternary form so existing exports stay untouched and integer-input semantics are explicit.\n\n**Approach** —\n- In `src/math.ts`, add a third named export below `negate`, preserving `add` and `negate` exactly as they are (same bodies, same signatures, no reordering, no extraction into shared helpers):\n\n```typescript\nexport function max2(a: number, b: number): number {\n  return a >= b ? a : b\n}\n```\n\n- The implementation MUST be the ternary `a >= b ? a : b`. Do NOT delegate to `Math.max` and do NOT add a canonical-zero guard like the one in `negate` — signed zero is out of scope and the ternary is what the spec pins.\n- In `test/math.test.ts`, extend the existing import line so it reads `import { add, max2, negate } from '../src/math'` (the file currently imports `{ add, negate }` from `'../src/math'` — keep the relative specifier and extensionless form).\n- Append a NEW `describe('max2', () => { ... })` block after the existing `add` and `negate` blocks; leave those two blocks byte-for-byte unchanged.\n- Test-name numbering (resolves SPEC_REVIEW issue `m-ac-numbering`): each test name is prefixed `M-AC<n>:` where `<n>` is **this spec's** acceptance-criterion number, 1–4. The prefix is anchored at the start of the test name string. Explicit mapping, one test per AC:\n  - `M-AC1:` → `expect(max2(3, 7)).toBe(7)`\n  - `M-AC2:` → `expect(max2(7, 3)).toBe(7)`\n  - `M-AC3:` → `expect(max2(-2, -5)).toBe(-2)`\n  - `M-AC4:` → `expect(max2(4, 4)).toBe(4)`\n- Use `bun:test` (`describe`, `expect`, `test`) — already imported at the top of the test file; no new imports beyond `max2`.\n\n**Scope** — In: `src/math.ts` (add `max2`), `test/math.test.ts` (add `max2` import + new `describe('max2', ...)` block with four `M-AC<n>:` tests). Out: any change to `add`, `negate` or their tests; other math functions; non-integer inputs (`NaN`, `Infinity`, signed zero) — do not test or special-case them; any file outside `src/` and `test/`; `.nax/config.json` and the `e2e` quality command.\n\n**Interface**\n```typescript\nexport function add(a: number, b: number): number\nexport function negate(n: number): number\nexport function max2(a: number, b: number): number // returns a when a >= b, otherwise b\n```",
+      "acceptanceCriteria": [
+        "max2(3, 7) returns 7.",
+        "max2(7, 3) returns 7.",
+        "max2(-2, -5) returns -2.",
+        "max2(4, 4) returns 4."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "typescript",
+        "additive"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Purely additive single-function export in one existing source file plus four assertions in one existing test file; no new dependencies, no new abstractions, no security surface. Standard tdd-simple (write the failing M-AC1..M-AC4 tests, then implement) fits."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "suggestedCriteria": [
+        "max2(-5, -2) returns -2 when both inputs are negative and the second is larger.",
+        "max2(-3, 3) returns 3 when the inputs have opposite signs and the second is larger."
+      ],
+      "outOfScope": [
+        "Non-integer inputs (`NaN`, `Infinity`, signed zero).",
+        "Other math functions.",
+        "Changes to existing exports (`add`, `negate`) or their existing tests.",
+        "New files outside `src/` and `test/`.",
+        "The `e2e` quality command in `.nax/config.json`."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Repository layout: a tiny pure-function TypeScript library. Only two source files matter here — `src/math.ts` (8 lines: `add(a,b)` and `negate(n)`, both named exports with explicit `: number` return types) and `test/math.test.ts` (26 lines, `bun:test`, three `describe` blocks: `add`, `negate`). Tooling: `package.json` scripts `test` → `bun test` and `typecheck` → `tsc --noEmit`; `tsconfig.json` has `strict: true`, `include: [\"src\", \"test\"]`, `types: [\"bun\"]`. No barrel/index file exists, so `src/math.ts` is the only entry point and is imported by the test file via the relative specifier `'../src/math'` (no `.ts` extension — moduleResolution `bundler`).\n\nImpact areas: (1) `src/math.ts` gains a third named export `max2(a: number, b: number): number` implemented as `a >= b ? a : b`; `add` and `negate` must remain byte-for-byte semantically unchanged — no refactor, no re-ordering, no shared helpers. (2) `test/math.test.ts` gains an import of `max2` alongside `add, negate` and a NEW `describe('max2', ...)` block appended after the existing blocks; existing `describe` blocks (`add`, `negate`) must not be touched. (3) No other consumers: a repo-wide check shows nothing else imports from `src/math` besides `test/math.test.ts`, so there is no downstream breakage risk and no migration path is required — the change is purely additive and backward compatible.\n\nNaming convention risk (called out by SPEC_REVIEW job cmw7sewsn005308mfd9bh88y6, issue `m-ac-numbering`): prior near-identical features (`f10-max`) showed that `nax plan` renumbers/extends AC numbering, so the bare `M-AC<n>:` prefix in the spec is ambiguous. Resolution adopted in this PRD: the test names must use `M-AC1:` … `M-AC4:` keyed to *this spec's* acceptance-criterion numbers 1–4 — i.e. `M-AC1:` = `max2(3, 7) === 7`, `M-AC2:` = `max2(7, 3) === 7`, `M-AC3:` = `max2(-2, -5) === -2`, `M-AC4:` = `max2(4, 4) === 4`. This mapping is stated explicitly in the story description so the implementer never has to guess. Note the existing `negate` block uses an unprefixed `AC1:`/`AC2:` style; the new block deliberately follows the spec's `M-AC<n>:` demand instead, and the old block stays as-is.\n\nDesign/technical decisions: keep the function pure and trivial (ternary), integer-only inputs; `NaN`, `Infinity` and signed-zero behaviour is explicitly out of scope and must not be tested or special-cased. Do NOT add the `n === 0` style canonical-zero guard that `negate` has — `max2` needs no such guard. No new dependencies, no new files, no changes to `.nax/config.json` or the `e2e` quality command (the sandbox gate is not part of this feature and must not be touched).\n\nRisks: (a) an implementer could \"helpfully\" refactor `add`/`negate` or add `Math.max` delegation — both are out of scope; `Math.max` would also change signed-zero behaviour, which is why the spec pins the ternary form. (b) An implementer could add NaN/Infinity tests — out of scope and would break the \"not tested\" clause. (c) Wrong test-number mapping (see above) — mitigated by the explicit 1–4 mapping in the description. Verification: `bun test` (finds `test/math.test.ts` by default) plus `bun run typecheck`, both already wired as pipeline stages.",
+  "outOfScope": [
+    "Non-integer inputs (`NaN`, `Infinity`, signed zero).",
+    "Other math functions.",
+    "Changes to existing exports.",
+    "New files outside `src/` and `test/`.",
+    "The `e2e` quality command in `.nax/config.json` (a sandbox gate for the koda flow live check; not part of this feature)."
+  ],
+  "routingProfile": "koda-job-cmw7sjetf006008mf1li24wgy"
+}
