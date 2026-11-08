@@ -3,7 +3,7 @@
   "feature": "f8-sign",
   "branchName": "feat/f8-sign",
   "createdAt": "2026-02-14T00:00:00.000Z",
-  "updatedAt": "2026-11-08T04:54:57.258Z",
+  "updatedAt": "2026-11-08T05:02:03.510Z",
   "userStories": [
     {
       "id": "US-001",
@@ -25,14 +25,17 @@
         "typescript"
       ],
       "dependencies": [],
-      "status": "pending",
-      "passes": false,
+      "status": "passed",
+      "passes": true,
       "attempts": 0,
       "escalations": [],
       "routing": {
         "complexity": "simple",
         "testStrategy": "tdd-simple",
-        "reasoning": "Single-file additive change to a pure function in src/math.ts plus a matching describe block in the existing test/math.test.ts. No new dependencies, no new abstractions, no cross-module impact, no security surface. The only subtlety is zero/NaN handling, which is fully covered by explicit assertions."
+        "reasoning": "Single-file additive change to a pure function in src/math.ts plus a matching describe block in the existing test/math.test.ts. No new dependencies, no new abstractions, no cross-module impact, no security surface. The only subtlety is zero/NaN handling, which is fully covered by explicit assertions.",
+        "initialComplexity": "simple",
+        "modelTier": "fast",
+        "initialModelTier": "fast"
       },
       "contextFiles": [
         "src/math.ts",
@@ -48,7 +51,11 @@
         "sign(Number.MIN_VALUE) returns 1.",
         "sign(-Number.MAX_VALUE) returns -1."
       ],
-      "workdirSource": "defaulted"
+      "workdirSource": "defaulted",
+      "priorErrors": [],
+      "priorFailures": [],
+      "storyPoints": 1,
+      "storyGitRef": "f6c4b305dbaceab9406c9aecbeea9aa3bdf09fc6"
     }
   ],
   "analysis": "Repository shape: a tiny TypeScript (strict) Bun library. Only two source-of-truth files exist: `src/math.ts` (8 lines) and `test/math.test.ts` (26 lines). `package.json` declares scripts `test: bun test` and `typecheck: tsc --noEmit`, with devDeps `@types/bun` and `typescript ^5.6.0`. `tsconfig.json` is strict, target ES2022, module ESNext, moduleResolution bundler, `types: [\"bun\"]`, `include: [\"src\", \"test\"]`. There is NO barrel/index file (`src/index.ts` does not exist), so `sign` is imported directly from `../src/math` by the test file — no export list elsewhere needs updating.\n\nExisting code (`src/math.ts:1-8`): `add(a: number, b: number): number` returns `a + b`; `negate(n: number): number` special-cases zero first (`if (n === 0) return 0`) so that `negate(0)` returns canonical positive zero rather than `-0`. That zero-normalisation idiom is the house pattern this feature must mirror: `sign` must also normalise `-0` to positive `0`.\n\nExisting tests (`test/math.test.ts:1-26`): one `describe('add', ...)` and one `describe('negate', ...)`, each test named with an `AC<n>:` prefix (`AC1:`, `AC2:`, `AC3:`, `AC5:`). Note the gap — `AC4` is absent in the negate block. Vitest/bun style: `import { describe, expect, test } from 'bun:test'`. `Object.is(...)` is already used to assert canonical-zero behaviour, and `toBe` is the dominant matcher. Because the new `sign` tests must use `S-AC<n>:` prefixed names, they cannot collide with the negate block's names, and namespacing is per-`describe` anyway.\n\nFiles to modify (only two, both existing):\n1. `src/math.ts` — add `export function sign(n: number): number` alongside `add` and `negate`. Purely additive; no line of `add`/`negate` changes.\n2. `test/math.test.ts` — add `sign` to the existing import from `../src/math` and append a new `describe('sign', ...)` block with `S-AC<n>:`-prefixed test names. Existing describes must remain byte-identical in behaviour.\n\nDependency/impact analysis: zero external consumers — nothing else in the repo imports `src/math.ts` (the repo has only these two project .ts files; everything else under `node_modules`). No published API, no `package.json` `exports` map, no build output step. So this is additive with no breaking-change or backward-compatibility risk. Migration path: none required — callers simply opt in by importing `sign`.\n\nSemantic traps that must be avoided (each one is a spec AC failure):\n- Delegating to `Math.sign` fails AC4: `Math.sign(-0)` is `-0`, so `Object.is(Math.sign(-0), 0)` is `false`. The function must return literal `0` for any zero input, including `-0`.\n- A naive comparison chain `n < 0 ? -1 : n > 0 ? 1 : 0` fails AC5: `NaN` compares false against both `< 0` and `> 0`, so it falls through to `0` instead of `NaN`. `NaN` must be handled explicitly (e.g. `if (Number.isNaN(n)) return NaN`) — note `n === 0` is already false for `NaN`, so the zero check and the NaN check are independent and order-safe.\n- `Infinity`/`-Infinity` need no special handling: `Infinity > 0` and `-Infinity < 0` already yield the right answers (AC6).\n- The declared return type must be explicit (`: number`), consistent with the two existing exports, per the spec's export requirement.\n\nTest naming convention (spec-mandated): the new block is `describe('sign', ...)` and every test inside it is named with an `S-AC<n>:` prefix (e.g. `S-AC1: sign(7) returns 1`). Justification: this is the naming convention the spec mandates, and it namespaces the new tests apart from the existing `negate` `AC<n>:` names.\n\nRisk assessment: low. Single small module, pure functions, no shared state, no async, no I/O. Primary risk is a subtly wrong zero/NaN implementation being written too quickly — mitigated by `Object.is` assertions for `-0` and `Number.isNaN` assertions for `NaN`.\n\nRecommended implementation shape (advisory, not prescriptive):\n```ts\nexport function sign(n: number): number {\n  if (Number.isNaN(n)) return NaN\n  if (n === 0) return 0\n  return n > 0 ? 1 : -1\n}\n```\nThis satisfies all six ACs: `-0` hits the `n === 0` branch and returns literal `+0`; `NaN` is caught first; infinities fall to the final ternary.",
