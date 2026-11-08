@@ -1,0 +1,64 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "f10-max",
+  "branchName": "feat/f10-max",
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2026-11-08T11:32:15.075Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add max2(a, b) to src/math.ts with tests in test/math.test.ts",
+      "description": "**Goal** — Add a `max2(a, b)` function to `src/math.ts`, next to `add` and `negate`, and cover it with a new `describe('max2', ...)` block in `test/math.test.ts`.\n\n**Motivation** — The lib currently exposes only `add` and `negate`; a NaN-aware, zero-sign-canonicalising `max2` is the next primitive and gives the fleet live check a pure function with genuinely subtle IEEE-754 edge behaviour.\n\n**Approach (verbatim from the spec's Requirements)**\n\n- `max2(a: number, b: number): number` returns the larger of `a` and `b`.\n- When either argument is `NaN`, it returns `NaN`.\n- `max2(0, -0)` and `max2(-0, 0)` both return positive zero (`0`).\n- Exported as a named export from `src/math.ts`, with an explicit return type.\n- `add`, `negate` and any other existing export are unchanged.\n- Tests go in `test/math.test.ts`, in a new `describe('max2', ...)` block whose test names are prefixed `M-AC<n>:`.\n\n**Approach (implementation notes)**\n\n1. Append the new function to `src/math.ts` after `negate`. Do not touch `add` or `negate`.\n2. A bare `Math.max(a, b)` is not sufficient on its own — `Math.max` returns `-0` for `Math.max(-0, -0)`, which the spec leaves unpinned, and the resolution adopted for this feature is that only MIXED signs promote to `+0`, so equal negative zeros stay `-0`. Implement the zero canonicalisation explicitly rather than relying on `Math.max`.\n3. NaN must be handled explicitly. `a < b` and `a > b` are both `false` when either operand is `NaN`, so a comparison-only implementation silently returns an operand instead of `NaN`. Guard with `if (Number.isNaN(a) || Number.isNaN(b)) return NaN` (or use `Number.isNaN(maxOf)` after selecting) BEFORE any comparison-based selection can leak a non-NaN result.\n4. Zero-sign trap: `a > b` and `a < b` are both false for `(0, -0)`, so whichever branch you take for ties must also normalise the sign. After selecting the larger value `m`, if `m === 0` and the two arguments are not identical (`a !== b`), return `+0` — i.e. `return 0`. This makes `max2(0, -0)` and `max2(-0, 0)` both `+0` while `max2(-0, -0)` stays `-0`.\n5. Note the existing house precedent at `src/math.ts:6-7` — `negate` already does `if (n === 0) return 0` to canonicalise zero; mirror that style.\n6. Declare the explicit return type: `export function max2(a: number, b: number): number`.\n7. In `test/math.test.ts`, append `max2` to the existing named import from `../src/math` (keep `add, negate` in place and just add `max2` so the diff is minimal — the import line becomes `import { add, max2, negate } from '../src/math'`), then append a new `describe('max2', () => { ... })` block. Do NOT modify the existing `describe('add', ...)` or `describe('negate', ...)` blocks.\n\n**Test naming — `M-AC<n>` numbering (from the flow's SPEC_REVIEW call `m-ac-numbering`)**\n\n`<n>` is the SPEC's acceptance-criterion number (1–5). It is NOT a story-level AC number and it does NOT follow any splitting/renumbering that `nax plan` performs. AC4 and AC5 each bundle two assertions; keep them together under `M-AC4:` and `M-AC5:` respectively — do not create `M-AC6:` or higher. Use exactly these test names:\n\n- `M-AC1: max2(3, 7) returns 7`\n- `M-AC2: max2(7, 3) returns 7`\n- `M-AC3: max2(-2, -5) returns -2`\n- `M-AC4: max2(NaN, 1) and max2(1, NaN) both return NaN`\n- `M-AC5: max2(0, -0) and max2(-0, 0) both return positive zero`\n\n**Zero-sign assertion detail (from the flow's SPEC_REVIEW call `neg-zero-equal`)** — the spec pins mixed-sign zeros to `+0` but says nothing about equal negative zeros; two implementations satisfying all five ACs disagree there. The choice for this feature is: only mixed signs promote to `+0`, so `max2(-0, -0)` returns `-0`. Put that assertion in the `M-AC5:` test alongside the two `Object.is(..., 0)` assertions (it is recorded in this story's `suggestedCriteria`; the spec's own AC5 remains the two `Object.is` checks).\n\n**Scope** — In: appending `max2` to `src/math.ts`; adding one `describe('max2', ...)` block with `M-AC1:`–`M-AC5:` test names and the `max2` import entry in `test/math.test.ts`. Out: any change to `add`, `negate`, or their tests; any other math function; any new file outside `src/` and `test/`; the `e2e` quality command in `.nax/config.json`.\n\n**Interface**\n\n```typescript\nexport function max2(a: number, b: number): number\n```",
+      "acceptanceCriteria": [
+        "`max2(3, 7)` returns `7`.",
+        "`max2(7, 3)` returns `7`.",
+        "`max2(-2, -5)` returns `-2`.",
+        "`Number.isNaN(max2(NaN, 1))` and `Number.isNaN(max2(1, NaN))` are both `true`.",
+        "`Object.is(max2(0, -0), 0)` and `Object.is(max2(-0, 0), 0)` are both `true`."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "unit"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Single-file additive change to `src/math.ts` plus one new `describe` block in the existing test file. No new dependencies, no new abstractions, no consumers other than the test. The only subtlety is IEEE-754 zero-sign and NaN handling, which is well defined by the spec and cheap to pin with direct assertions."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json"
+      ],
+      "suggestedCriteria": [
+        "`max2(-0, -0)` returns `-0` (only mixed zero signs promote to `+0`).",
+        "`max2(2, 2)` returns `2` (equal non-zero operands return that value).",
+        "`Number.isNaN(max2(NaN, NaN))` is `true`.",
+        "`max2(Infinity, 1)` returns `Infinity` and `max2(-Infinity, -1)` returns `-1`.",
+        "`max2(0, 5)` returns `5` and `max2(-5, 0)` returns `0`.",
+        "`max2(0.5, -0.5)` returns `0.5`."
+      ],
+      "outOfScope": [
+        "Other math functions.",
+        "Changes to existing exports.",
+        "New files outside `src/` and `test/`.",
+        "The `e2e` quality command in `.nax/config.json` (a sandbox gate for the koda flow live check; not part of this feature)."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "## Codebase findings\n\n- `src/math.ts:1` — the only source file. 8 lines. Contains exactly two named exports: `add(a: number, b: number): number` (plain `a + b`, so `add(0, -0)` yields `+0`) and `negate(n: number): number`, which explicitly normalises zero: `if (n === 0) return 0`. That `if (n === 0) return 0` guard is the established house precedent for canonical-positive-zero handling and is the pattern `max2` should follow.\n- `test/math.test.ts:1` — the only test file. 26 lines. Imports `{ describe, expect, test }` from `bun:test` and `{ add, negate }` from `../src/math`. Two `describe` blocks (`add`, `negate`); the `negate` block uses the `AC<n>:` test-name prefix convention (`AC1:`, `AC2:`, `AC3:`, `AC5:`). Note the sibling feature's prefix is `AC<n>`, while this feature mandates `M-AC<n>`, so the new block must use the `M-` namespaced prefix to stay distinguishable inside the same file.\n- `package.json:4` — `bun test` and `tsc --noEmit` (strict). No test framework beyond `bun:test`; no build step to worry about.\n- No `tsconfig.json` in the read set, but the project is documented as Bun + TypeScript strict, so `max2` needs an explicit return type (which the spec also mandates) to avoid `noImplicitAny`/inference-lint concerns and to document the NaN contract.\n\n## Impact areas\n\n- `src/math.ts` — additive change only. New `export function max2(a: number, b: number): number` appended after `negate`. `add` and `negate` bodies and signatures are untouched, so there is no breaking change and no migration path needed.\n- `test/math.test.ts` — additive change only. One new `describe('max2', ...)` block appended, plus `max2` added to the existing named import list from `../src/math`. Existing `add`/`negate` blocks stay byte-identical.\n- No other consumers: `src/math.ts` is imported only by `test/math.test.ts`; nothing else in the repo references it. No barrel/index file exists.\n\n## Semantic decisions\n\n- `Math.max` alone is NOT a sufficient implementation: `Math.max(NaN, 1)` is correctly `NaN`, but `Math.max(0, -0)` is `+0` while `Math.max(-0, 0)` is `+0` too — that part happens to match — yet `Math.max(-0, -0)` is `-0`, and the flow's spec review flagged that `max2(-0, -0)` is unpinned by the spec. The spec pins only the mixed-sign cases to `+0`; the resolution adopted here is that only mixed signs promote to `+0`, and equal negative zeros stay `-0` (which is what `Math.max` already does).\n- A straightforward implementation that satisfies every stated AC: `if (Number.isNaN(a) || Number.isNaN(b)) return NaN; return a > b ? (b === 0 && a === 0 ? 0 : a) : (a === 0 && b === 0 ? 0 : b)` — but note that `a > b` is false for equal operands and for `(0, -0)`, so the zero-normalisation branch must be reached on both paths. A cleaner form is `if (Number.isNaN(a) || Number.isNaN(b)) return NaN` followed by `const m = a < b ? b : a` and then `if (m === 0 && (a !== b)) return 0`. Implementers must verify all five ACs, including that `Object.is(max2(0, -0), 0)` and `Object.is(max2(-0, 0), 0)` are `true` (`toBe(0)` in `bun:test` uses `Object.is`, so a returned `-0` fails).\n- NaN propagation must be explicit: `a < b` / `a > b` are both `false` when either side is NaN, so a comparison-only implementation silently returns one of the operands instead of NaN. The `Number.isNaN` guard is required.\n\n## Naming decision (from spec review call `m-ac-numbering`)\n\n`n` in the `M-AC<n>:` test-name prefix refers to the SPEC's acceptance-criterion number (1–5), not a story-level or post-plan renumbered AC. AC4 and AC5 each bundle two assertions, and the plan may split or renumber them; the test names must not follow that renumbering. So the block will contain names prefixed `M-AC1:` … `M-AC5:` (with `M-AC4:` covering both NaN assertions and `M-AC5:` covering both zero-sign assertions), and `M-AC<n>` never exceeds 5.\n\n## Risks\n\n- Zero-sign handling is the only real trap: `bun:test`'s `toBe`/`toEqual` use `Object.is`, so `-0` vs `0` differences will fail loudly rather than silently — good.\n- Adding `max2` to the existing import statement in `test/math.test.ts` is the only edit inside otherwise-untouched lines; keep the `add, negate` ordering and just append `max2` to avoid a noisy diff.\n- The `e2e` quality command in `.nax/config.json` is a sandbox gate, explicitly out of scope; do not modify it or chase its failures.",
+  "outOfScope": [
+    "Other math functions.",
+    "Changes to existing exports.",
+    "New files outside `src/` and `test/`.",
+    "The `e2e` quality command in `.nax/config.json` (a sandbox gate for the koda flow live check; not part of this feature)."
+  ],
+  "routingProfile": "koda-job-cmw7r4lzd001808mf891111mp"
+}
