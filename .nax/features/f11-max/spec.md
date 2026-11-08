@@ -26,3 +26,9 @@ Add a `max2(a, b)` function to `src/math.ts`, next to `add` and `negate`, for in
 - Changes to existing exports.
 - New files outside `src/` and `test/`.
 - The `e2e` quality command in `.nax/config.json` (a sandbox gate for the koda flow live check; not part of this feature).
+
+## Flow's calls
+
+### SPEC_REVIEW job cmw7sewsn005308mfd9bh88y6
+
+- **m-ac-numbering** (minor): The `M-AC<n>:` test-name prefix on line 13 is unanchored, and the prior near-identical spec's recorded `SPEC_REVIEW` call plus the f10-max PRD (5 spec ACs → 7 planned story ACs) show `nax plan` renumbers/extends ACs, so the implementer again cannot tell whether n is the spec's 1–4 or the planned story's numbering. Call: Reword line 13 to "test names are prefixed `M-AC<n>:`, where `<n>` is this spec's acceptance-criterion number (1–4)".
