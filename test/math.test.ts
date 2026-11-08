@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { add, negate } from '../src/math'
+import { add, max2, negate } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
@@ -22,5 +22,23 @@ describe('negate', () => {
 
   test('AC5: negate(0.5) returns -0.5', () => {
     expect(negate(0.5)).toBe(-0.5)
+  })
+})
+
+describe('max2', () => {
+  test('M-AC1: max2(3, 7) returns 7', () => {
+    expect(max2(3, 7)).toBe(7)
+  })
+
+  test('M-AC2: max2(7, 3) returns 7', () => {
+    expect(max2(7, 3)).toBe(7)
+  })
+
+  test('M-AC3: max2(-2, -5) returns -2', () => {
+    expect(max2(-2, -5)).toBe(-2)
+  })
+
+  test('M-AC4: max2(4, 4) returns 4', () => {
+    expect(max2(4, 4)).toBe(4)
   })
 })
