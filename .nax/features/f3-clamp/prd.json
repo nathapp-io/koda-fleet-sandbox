@@ -2,31 +2,30 @@
   "project": "koda-fleet-sandbox",
   "feature": "f3-clamp",
   "branchName": "feat/f3-clamp",
-  "createdAt": "2025-06-10T00:00:00.000Z",
-  "updatedAt": "2026-11-08T02:42:27.040Z",
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2026-11-08T03:40:01.689Z",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Add clamp(n, min, max) to src/math.ts",
-      "description": "**Goal** — Add a named-export `clamp(n, min, max)` function to `src/math.ts`, alongside the existing `add` and `negate`, and cover it with a `describe('clamp', ...)` block in `test/math.test.ts`.\n\n**Motivation** — The library currently offers only `add` and `negate`; `clamp` lets callers bound a number to a range while guaranteeing a canonical positive zero and a clear `RangeError` contract for inverted bounds.\n\n**Interface** — in `src/math.ts`, next to `add` and `negate` (named export, no default export):\n```typescript\nclamp(n: number, min: number, max: number): number\n```\n\n**Approach** — ordered algorithm, follow the steps in this order exactly:\n\n1. **Bounds guard first.** If the bounds are usable (`!Number.isNaN(min) && !Number.isNaN(max)`) and `min > max`, throw `new RangeError('min must not exceed max')` before any clamping. Because any comparison with `NaN` is false, a NaN bound never triggers this guard. Note that `n` being NaN does NOT suppress the guard: `clamp(NaN, 10, 0)` still throws, because the bounds 10 and 0 are both non-NaN.\n2. **NaN policy.** If any of `n`, `min` or `max` is NaN, return `NaN`. (Chosen policy (a): return NaN whenever n, min or max is NaN.)\n3. **Clamp by ordinary comparison.** Select `min` when `n < min`, `max` when `n > max`, and `n` otherwise.\n4. **Zero normalization as a final step.** Applied to the value selected in step 3, overriding all three branches: if the selected value is `0` (which includes `-0`, because `-0 === 0`), return canonical positive `0`; otherwise return the selected value unchanged. This is why `clamp(-0, 0, 10)` returns `0` (selected `n`), `clamp(-5, -0, 0)` returns `0` (selected `min`) and `clamp(5, -10, -0)` returns `0` (selected `max`).\n\nImplementation notes: prefer explicit comparisons over `Math.min`/`Math.max`, which propagate NaN silently and return `-0` for `Math.min(-0, 0)`-style inputs. The existing `negate` in `src/math.ts:6-7` uses the same canonical-zero idiom (`if (n === 0) return 0`) — mirror that precedent. Keep `add` and `negate` byte-for-byte unchanged, and keep their existing `describe` blocks in `test/math.test.ts` untouched and green.\n\n**Scope** — In: `src/math.ts` (add the `clamp` export) and `test/math.test.ts` (add `clamp` to the existing `import { ... } from '../src/math'` line and add a `describe('clamp', ...)` block covering every acceptance criterion). Out: changes to `add` or `negate` and their tests; any other math helpers; Infinity handling; any file outside `src/` and `test/`.",
+      "title": "Add clamp(n, min, max) to src/math.ts with bounds guard, NaN policy and positive-zero normalization",
+      "description": "**Goal** — Add a named export `clamp(n, min, max)` to `src/math.ts`, next to `add` and `negate`, returning the value bounded to `[min, max]`, throwing `RangeError` for inverted bounds, propagating `NaN`, and always yielding positive zero for a zero result.\n\n**Motivation** — The library currently exposes only `add` and `negate`; `clamp` is the next primitive, and it must follow the existing house rule already visible in `negate` (never return `-0`).\n\n**Interface**\n```typescript\nexport function clamp(n: number, min: number, max: number): number\n```\n\n**Approach** — exact sequence, in this order:\n1. Bounds guard runs FIRST, only on non-NaN bounds: `if (!Number.isNaN(min) && !Number.isNaN(max) && min > max) throw new RangeError('min must not exceed max')`. Message must be exactly `min must not exceed max`. (Any comparison with `NaN` is `false`, so the guard never throws for NaN bounds.)\n2. NaN policy (product-owner decision, option (a)): if any of `n`, `min`, `max` is `NaN` — test with `Number.isNaN` — return `NaN`. Because the guard from step 1 already ran, `clamp(NaN, 10, 0)` throws instead of returning `NaN`.\n3. Selection: `n < min ? min : n > max ? max : n`.\n4. Final zero normalization applied to the value selected by step 3 (it overrides that selection): if the selected result is zero, return positive zero `0`, never `-0`. `result === 0 ? 0 : result` is sufficient because `-0 === 0`.\n\nWorked consequences of this ordering that the implementation must reproduce: `clamp(-0, 0, 10)` selects `n = -0` and normalizes to `0`; `clamp(-5, -0, 0)` selects `min = -0` and normalizes to `0`; `clamp(5, -10, -0)` selects `max = -0` and normalizes to `0`. All three branches of the selection can produce `-0`, so normalization must not be limited to the `n` branch.\n\n`add` and `negate` in `src/math.ts` are unchanged. Append a `describe('clamp', ...)` block to the existing `test/math.test.ts`, importing `clamp` alongside the current `{ add, negate }` import.\n\n**Scope** — In: the `clamp` export in `src/math.ts`; the `clamp` test suite appended to `test/math.test.ts`. Out: any edit to `add` or `negate`; other math functions; Infinity handling; new files outside `src/` and `test/`.",
       "acceptanceCriteria": [
-        "clamp(5, 0, 10) returns 5.",
-        "clamp(-1, 0, 10) returns 0.",
-        "clamp(11, 0, 10) returns 10.",
-        "clamp(0, 0, 0) returns 0.",
-        "clamp(1, 2, 1) throws a RangeError with message 'min must not exceed max'.",
-        "Object.is(clamp(-0, 0, 10), 0) is true.",
-        "Object.is(clamp(-5, -0, 0), 0) is true.",
-        "Object.is(clamp(5, -10, -0), 0) is true.",
-        "clamp(NaN, 0, 10) returns NaN (Number.isNaN(clamp(NaN, 0, 10)) is true).",
-        "clamp(5, NaN, 10) returns NaN (Number.isNaN(clamp(5, NaN, 10)) is true).",
-        "clamp(5, 0, NaN) returns NaN (Number.isNaN(clamp(5, 0, NaN)) is true).",
-        "clamp returns 5 for clamp(5, 5, 5) and returns -3 for clamp(-3, -3, 10), preserving the inclusive-boundary behaviour of the ordinary comparisons."
+        "clamp(5, 0, 10) returns 5",
+        "clamp(-1, 0, 10) returns 0",
+        "clamp(11, 0, 10) returns 10",
+        "clamp(0, 0, 0) returns 0",
+        "clamp(1, 2, 1) throws a RangeError with message `min must not exceed max`",
+        "Object.is(clamp(-0, 0, 10), 0) is true",
+        "Object.is(clamp(-5, -0, 0), 0) is true",
+        "Object.is(clamp(5, -10, -0), 0) is true",
+        "clamp(NaN, 0, 10) returns NaN (Number.isNaN is true) and does not throw",
+        "clamp(5, NaN, 10) returns NaN (Number.isNaN is true) and does not throw",
+        "clamp(5, 0, NaN) returns NaN (Number.isNaN is true) and does not throw"
       ],
       "tags": [
         "feature",
         "math",
-        "unit"
+        "core"
       ],
       "dependencies": [],
       "status": "pending",
@@ -36,30 +35,26 @@
       "routing": {
         "complexity": "simple",
         "testStrategy": "tdd-simple",
-        "reasoning": "Single self-contained function added to one existing 8-line source file plus one existing test file; purely additive, no new dependencies or abstractions, low risk. Edge cases (signed zero, NaN, RangeError ordering) are well specified, so tdd-simple fits."
+        "reasoning": "Single-file additive change to an 8-line module plus appending one describe block to an existing 26-line test file. No new abstractions, no dependencies, no call sites to migrate. The only subtlety is ordering (guard -> NaN -> select -> normalize zero), which the description spells out step by step."
       },
       "contextFiles": [
         "src/math.ts",
         "test/math.test.ts"
       ],
       "suggestedCriteria": [
-        "clamp(NaN, 10, 0) throws a RangeError with message 'min must not exceed max', because the min > max guard runs first on the non-NaN bounds and a NaN n does not suppress it.",
-        "clamp(5, NaN, NaN) returns NaN without throwing, because a NaN bound never satisfies the min > max guard.",
-        "clamp(-0, -0, -0) returns positive zero, so Object.is(clamp(-0, -0, -0), 0) is true."
-      ],
-      "outOfScope": [
-        "Other math functions.",
-        "Infinity handling.",
-        "New files outside `src/` and `test/`."
+        "clamp(NaN, 10, 0) throws a RangeError with message `min must not exceed max`, because the inverted-bounds guard runs before the NaN short-circuit and the bounds are not NaN",
+        "Object.is(clamp(-0, -5, 5), 0) is true, because an in-range `n` of `-0` is normalized by the final step even when neither bound is zero",
+        "clamp(NaN, NaN, NaN) returns NaN (Number.isNaN is true) and does not throw, because the inverted-bounds guard never fires on NaN bounds",
+        "add(2, 3) still returns 5 and Object.is(negate(0), 0) is still true, preserving the existing exports unchanged"
       ],
       "workdirSource": "defaulted"
     }
   ],
-  "analysis": "Codebase is a minimal, greenfield-scale TypeScript library (Bun runtime, strict TS, no runtime dependencies).\n\nExisting code (verbatim, src/math.ts:1-8):\n  export function add(a: number, b: number): number { return a + b }\n  export function negate(n: number): number { if (n === 0) return 0; return -n }\n\nKey findings:\n- src/math.ts is the only source module (8 lines) and is the required home for the new `clamp` named export (spec: 'next to add and negate').\n- `negate` already establishes the repo's canonical-zero idiom: `if (n === 0) return 0` (src/math.ts:6-7), i.e. -0 must be returned as +0. `clamp` must apply the same normalization as a FINAL step to whichever value it selects (n, min or max), because a signed zero can enter through any of the three arguments. `negate(0)` returning canonical +0 is already covered by the existing test at test/math.test.ts:17-19, which is the precedent the clamp zero ACs mirror.\n- test/math.test.ts is the only test file (26 lines) and already imports `{ add, negate }` from '../src/math' (test/math.test.ts:2). `clamp` must be added to that import and covered by a new `describe('clamp', ...)` block in the same file. Existing `add` and `negate` describe blocks must remain untouched and green — they are the backward-compatibility regression anchor for this feature.\n- Tooling: package.json declares `test: bun test` and `typecheck: tsc --noEmit`; tsconfig.json uses strict mode with `include: [\"src\", \"test\"]`, ES2022 target, bundler resolution. No build step, no bundler config, no lint config. No new dependencies are permitted (AGENTS.md conventions; spec out-of-scope for new files outside src/ and test/).\n- Package is `private: true`, `type: module`, and nothing outside src/ and test/ imports these functions, so there are no downstream consumers to migrate: adding a named export is purely additive and cannot break `add`/`negate`.\n\nDecided semantics (from the resolved spec-review answers — these override any older wording):\n1. NaN policy is (a): if any of n, min or max is NaN, return NaN. Test with Number.isNaN(...). This decision supersedes the earlier draft PRD text that said 'do NOT add NaN or Infinity guards' and listed NaN handling as out of scope; NaN is now IN scope while Infinity remains out of scope.\n2. The `min > max` RangeError guard runs FIRST, and only over non-NaN bounds: because any comparison with NaN is false, `clamp(1, NaN, NaN)` style inputs never throw from this guard. Concretely the guard fires only when neither bound is NaN. `clamp(NaN, 10, 0)` therefore still throws (bounds 10 and 0 are both non-NaN and 10 > 0), because n being NaN does not suppress the bounds check.\n3. Zero normalization is a FINAL normalization applied to the value selected by the ordinary clamping rule, explicitly overriding all three branches: clamp(-0, 0, 10) -> 0 (selected n), clamp(-5, -0, 0) -> 0 (selected min), clamp(5, -10, -0) -> 0 (selected max).\n\nRisks / traps for the implementer:\n- `Math.min`/`Math.max` return -0 for Math.min(-0, 0)-style inputs and mix NaN through silently, so a Math.min/Math.max implementation makes it easy to violate the NaN policy or the signed-zero ACs. Explicit comparisons plus a final `result === 0 ? 0 : result` normalization are safer.\n- A `result === 0 ? 0 : result` style check works because `-0 === 0` is true; do NOT use `Object.is(result, -0)` in the implementation path in a way that only fixes one branch.\n- Throwing the RangeError must happen before clamping and before the NaN early-return in the sense that the bounds check is evaluated first; keep the guard as the first statement and guard it with non-NaN bound checks.\n- The literal error message must be exactly `min must not exceed max` (test against error.message / toThrow(new RangeError('min must not exceed max'))).\n- tsconfig `strict: true` — no implicit any, and the function must be explicitly typed.\n\nMigration path: none required. Purely additive change to one source file plus one test file; `add` and `negate` behaviour and their tests are unchanged.",
+  "analysis": "Codebase is a minimal Bun + TypeScript (strict) library. Only two runtime files exist: `src/math.ts` (8 lines: named exports `add(a,b)` and `negate(n)`, where `negate` already encodes the house convention `if (n === 0) return 0` to avoid returning `-0`) and `test/math.test.ts` (26 lines, `bun:test` `describe`/`test`/`expect`, already importing `{ add, negate }` from `'../src/math'`). `package.json` scripts: `test` = `bun test`, `typecheck` = `tsc --noEmit`; deps are dev-only (`@types/bun`, `typescript`) — no new dependencies may be added.\n\nImpact / files to modify:\n- `src/math.ts` (src/math.ts:1-8) — add one new named export `clamp` next to `add`/`negate`. `add` and `negate` must stay byte-for-byte behaviourally unchanged; nothing else imports them, so there is no downstream consumer risk.\n- `test/math.test.ts` (test/math.test.ts:1-26) — add a `describe('clamp', ...)` block. Existing `add`/`negate` suites must keep passing; the existing `negate` suite is the precedent for positive-zero assertions via `Object.is` (test/math.test.ts:19-21).\n\nKey design decisions (resolved by the product owner, not left to the implementer):\n1. Guard order — the `min > max` `RangeError` check runs FIRST, and only on non-NaN bounds. Implemented as `if (!Number.isNaN(min) && !Number.isNaN(max) && min > max) throw new RangeError('min must not exceed max')`. Because every comparison with `NaN` is `false`, `min > max` can never fire when `min` or `max` is `NaN`, so the explicit `Number.isNaN` guards are belt-and-braces but document the intent. The guard must fire before any clamping and before the NaN short-circuit.\n2. NaN policy — decided option (a): return `NaN` whenever `n`, `min` or `max` is `NaN` (checked with `Number.isNaN`, not `=== NaN`). Note the interaction: `clamp(NaN, 10, 0)` THROWS `RangeError` because the guard runs first on non-NaN bounds 10 and 0, even though `n` is NaN. `clamp(NaN, 0, 10)` — NaN bound-free and in-range — returns NaN without throwing.\n3. Zero normalization is a FINAL step applied to the value selected by the clamping rule, not a peer rule: select `min | max | n`, then `result === 0 ? 0 : result`. This is required because with `n = -0` inside ordinary bounds the selection branch returns `-0`, and AC6 demands positive zero. It also covers AC7 (`clamp(-5, -0, 0)`: `min` is `-0`) and AC8 (`clamp(5, -10, -0)`: `max` is `-0`) — all three branches can produce `-0` and all must normalize. `result === 0` is `true` for `-0`, so the ternary is sufficient (no `Object.is` needed in the implementation).\n\nRisks: low. Purely additive to a throwaway sandbox library. The only realistic failure modes are (a) getting the guard/NaN ordering backwards so `clamp(NaN, 10, 0)` silently returns NaN instead of throwing, and (b) forgetting the normalization on the `min`/`max` branches (AC7/AC8) while only handling `n = -0`. Tests must use `Object.is` (or `expect(...).toBe(0)` does NOT distinguish -0 in bun:test — use `Object.is`) for the zero assertions.\n\nMigration: none — new export only, no call sites to update. No new files outside `src/` and `test/`; AGENTS.md convention of one `bun:test` file per module is already satisfied by appending to `test/math.test.ts` rather than adding a new file.",
   "outOfScope": [
     "Other math functions.",
     "Infinity handling.",
     "New files outside `src/` and `test/`."
   ],
-  "routingProfile": "koda-job-cmw787g8s003807qret1glhen"
+  "routingProfile": "koda-job-cmw7a9nal001508qe690r5f1l"
 }
