@@ -27,3 +27,10 @@ Add an `abs(n)` function to `src/math.ts`, next to `add` and `negate`.
 - Other math functions.
 - Changes to `add` or `negate`.
 - New files outside `src/` and `test/`.
+
+## Flow's calls
+
+### SPEC_REVIEW job cmw7dn59v000808qj2mtid4bb
+
+- **abs-neg-zero-wording** (minor): Requirements bullet 1 (`-n` when n<0, `n` otherwise) yields `-0` for abs(-0), contradicting bullet 2 and AC4; the override is only stated in a separate bullet, so the algorithm text can be quoted against a correct zero guard. Call: Restate bullet 1 as: `abs(n: number): number` returns `-n` when `n < 0`, `0` when `n === 0`, and `n` otherwise — so the `-0` guarantee is part of the algorithm rather than a second rule.
+- **abs-fractional-ac** (minor): No AC exercises a fractional input, leaving the branch a future `!n`-style guard regression would break untested (same shape as the review finding on the negate run). Call: Add `7. [unit] `abs(-0.5)` returns `0.5`.` to Acceptance criteria.
