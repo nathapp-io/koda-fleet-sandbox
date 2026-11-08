@@ -12,6 +12,7 @@ Add a `clamp(n, min, max)` function to `src/math.ts`, next to `add` and `negate`
 - Exported as a named export from `src/math.ts`.
 - `add` and `negate` are unchanged.
 - Tests go in `test/math.test.ts`.
+- `clamp` must handle a `NaN` argument (`n`, `min` or `max`), but the expected result is NOT decided yet: it could return `NaN`, throw a `RangeError`, or treat `NaN` as unbounded. The product owner must choose before implementation.
 
 ## Acceptance criteria
 
@@ -27,5 +28,5 @@ Add a `clamp(n, min, max)` function to `src/math.ts`, next to `add` and `negate`
 ## Out of scope
 
 - Other math functions.
-- NaN or Infinity handling.
+- Infinity handling.
 - New files outside `src/` and `test/`.
