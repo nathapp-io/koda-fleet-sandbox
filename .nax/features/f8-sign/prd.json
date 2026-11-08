@@ -1,0 +1,62 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "f8-sign",
+  "branchName": "feat/f8-sign",
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-11-08T04:50:12.949Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add sign(n) to src/math.ts with canonical zero and NaN handling, plus S-AC tests",
+      "description": "**Goal** — Add a named export `sign(n: number): number` to `src/math.ts` alongside the existing `add` and `negate`, returning `-1` for negative values, `1` for positive values, canonical positive `0` for `0` and `-0`, and `NaN` for `NaN`; then cover it with a new `describe('sign', ...)` block in `test/math.test.ts` whose test names are prefixed `S-AC<n>:`.\n\n**Motivation** — `src/math.ts` currently exposes only `add` and `negate`; `sign` is the next primitive needed next to them, and it must follow the same canonical-positive-zero discipline that `negate` already establishes with its `if (n === 0) return 0` guard (`src/math.ts:6`).\n\n**Approach** — \n\n1. In `src/math.ts`, append a new named export AFTER `negate` — do not touch or reorder `add` (currently `src/math.ts:1-3`) or `negate` (currently `src/math.ts:5-8`); both must remain behaviorally unchanged.\n\n2. Write the signature as a named export with an explicit return type: `export function sign(n: number): number`.\n\n3. Implementation must be a hand-written guard chain, and the ordering matters:\n   - First handle `NaN` explicitly — `if (Number.isNaN(n)) return NaN`. This MUST come before the range comparisons, because all comparisons against `NaN` are `false` and a naive chain would fall through and return `0`, violating the `sign(NaN) → NaN` requirement.\n   - Then `if (n > 0) return 1`.\n   - Then `if (n < 0) return -1`.\n   - Then return the literal `0` (positive zero) as the final fallthrough, so both `0` and `-0` produce positive zero.\n\n4. **Do NOT implement `sign` by delegating to `Math.sign`.** `Math.sign(-0)` returns `-0`, which would fail the requirement that `Object.is(sign(-0), 0)` is `true`. The positive-zero literal in step 3 is what satisfies that requirement, exactly as `negate`'s `n === 0` guard does.\n\n5. `Infinity` and `-Infinity` need no special handling: `Infinity > 0` is `true` and `-Infinity < 0` is `true`, so the ordinary comparisons in step 3 give `1` and `-1` respectively.\n\n6. In `test/math.test.ts`, extend the existing import on line 2 to also pull in `sign` from `'../src/math'` (keeping `add` and `negate` in that same import), then add a new `describe('sign', () => { ... })` block after the existing `describe('negate', ...)` block. Every test name inside the new block MUST be prefixed `S-AC<n>:` — for example `test('S-AC1: sign(7) returns 1', ...)` — because the existing `negate` block already uses bare `AC1:`/`AC2:`/`AC3:`/`AC5:` names, and `bun:test` identifies tests by name, so unprefixed names would collide. Do not rename or restructure the existing `add` or `negate` describes/tests.\n\n7. Use `Object.is(...)` for the two zero assertions (`Object.is(sign(0), 0)` and `Object.is(sign(-0), 0)`) rather than `toBe(0)`, and `Number.isNaN(...)` for the NaN assertion — the same discriminating style already used at `test/math.test.ts:20`.\n\n**Scope** — In: adding `sign` to `src/math.ts`; adding the `sign` import and a `describe('sign', ...)` block with `S-AC<n>:`-prefixed tests to `test/math.test.ts`. Out: modifying `add` or `negate` in any way (including their existing tests); any other math function (e.g. `abs`, `clamp`, `trunc`, `sign`-adjacent helpers); adding a barrel/index file or any new file outside `src/` and `test/`; changing `package.json`, tsconfig, or test runner configuration.\n\n**Interface** —\n```typescript\nexport function sign(n: number): number\n```\nWithin `src/math.ts`, exported as a named export alongside the existing unchanged exports:\n```typescript\nexport function add(a: number, b: number): number\nexport function negate(n: number): number\nexport function sign(n: number): number\n```\nTests import it as:\n```typescript\nimport { add, negate, sign } from '../src/math'\n```",
+      "acceptanceCriteria": [
+        "sign(7) returns 1.",
+        "sign(-3) returns -1.",
+        "Object.is(sign(0), 0) is true.",
+        "Object.is(sign(-0), 0) is true.",
+        "Number.isNaN(sign(NaN)) is true.",
+        "sign(Infinity) returns 1 and sign(-Infinity) returns -1."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "pure-function"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Single-file additive change to `src/math.ts` plus one new describe block in the existing `test/math.test.ts`. No new dependencies, no new abstractions, no cross-module wiring, no external consumers (no barrel file, package is private). The only subtlety is guard ordering (NaN before comparisons) and avoiding `Math.sign`'s `-0` result, which is standard numeric edge-case handling rather than architectural risk. Not security-critical."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts"
+      ],
+      "suggestedCriteria": [
+        "sign(0.5) returns 1.",
+        "sign(-0.5) returns -1.",
+        "Object.is(sign(-0.0), 0) is true when -0 is produced via a computed negative zero such as -1 * 0.",
+        "sign(Number.MIN_VALUE) returns 1.",
+        "sign(-Number.MAX_VALUE) returns -1.",
+        "add and negate keep their existing behavior after sign is added: add(2, 3) returns 5 and negate(5) returns -5."
+      ],
+      "outOfScope": [
+        "Other math functions.",
+        "Changes to `add` or `negate`.",
+        "New files outside `src/` and `test/`."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Tiny greenfield-style TypeScript library (Bun + strict TS, no runtime deps). Only two source files matter for this feature:\n\n- `src/math.ts` (8 lines total) currently exports exactly two named functions with explicit return types: `add(a: number, b: number): number` (src/math.ts:1) and `negate(n: number): number` (src/math.ts:5). `negate` already establishes the canonical-zero convention this feature must follow: `if (n === 0) return 0` (src/math.ts:6) exists specifically so `negate(-0)` does not produce `-0`. This is the pattern to mirror for `sign`.\n- `test/math.test.ts` (26 lines) uses `bun:test` (`describe`, `expect`, `test`) and imports `{ add, negate }` from `../src/math` (test/math.test.ts:2). It has a `describe('add', ...)` block and a `describe('negate', ...)` block whose test names are prefixed with the spec-criterion ids `AC1:`, `AC2:`, `AC3:`, `AC5:` (note: there is no `AC4` in the negate block; ids are not contiguous). Because bun:test registers tests by name, the new `sign` tests must use the `S-AC<n>:` prefix demanded by the spec to avoid ambiguous/duplicate names like `AC1:` appearing twice in one file.\n\nImpact / blast radius: no index/barrel file exists (no `src/index.ts`), so adding a named export to `src/math.ts` needs no re-export plumbing. `package.json` has no `exports`/`main` field — private package, consumed only by the local test file. Grep confirms `add` and `negate` are referenced only by `test/math.test.ts`, so there are no downstream importers to break; keeping `add` and `negate` byte-identical is trivially verifiable by the existing tests continuing to pass.\n\nKey technical decision (semantics): the naive implementation `if (n > 0) return 1; if (n < 0) return -1; return 0` silently returns `0` for `NaN`, because every comparison with `NaN` is `false`. The spec requires `sign(NaN)` to be `NaN`, so the NaN case must be handled explicitly BEFORE the range comparisons (e.g. `if (Number.isNaN(n)) return NaN`, or `n !== n`). Similarly, a `-0` argument must fall through to a literal `return 0` (never `-0`) so `Object.is(sign(-0), 0) === true` — this is exactly why `negate` uses the `n === 0` guard, and `sign` gets it for free by returning a positive-zero literal rather than e.g. `n` or `n / Math.abs(n)`.\n\nInfinity needs no special casing: `Infinity > 0` and `-Infinity < 0` are `true`, so the ordinary comparisons satisfy AC6. Avoid `Math.sign`-based delegating implementations only if a `NaN` guarantee is required — `Math.sign` does return `NaN` and canonical `0`/`-0`→ actually `Math.sign(-0)` returns `-0`, which would FAIL AC4 (`Object.is(sign(-0), 0)` must be `true`). So `Math.sign` cannot be used directly; a hand-written guard chain is required.\n\nRisks: (1) accidentally delegating to `Math.sign`, which returns `-0` for `-0` and breaks AC4; (2) putting the `NaN` check after the comparisons, which returns `0` and breaks AC5; (3) returning `n < 0 ? -1 : ...` in a way that can propagate `-0`; (4) test-name collisions with the existing `AC<n>:` names. No migration path needed — purely additive, backward compatible. Verification commands already defined in `package.json`: `bun test` and `bun run typecheck`.",
+  "outOfScope": [
+    "Other math functions.",
+    "Changes to `add` or `negate`.",
+    "New files outside `src/` and `test/`."
+  ],
+  "routingProfile": "koda-job-cmw7croah00be08qe1u0cxhd8"
+}
