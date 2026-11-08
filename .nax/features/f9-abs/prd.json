@@ -3,7 +3,7 @@
   "feature": "f9-abs",
   "branchName": "feat/f9-abs",
   "createdAt": "2025-01-01T00:00:00.000Z",
-  "updatedAt": "2026-11-08T05:19:27.985Z",
+  "updatedAt": "2026-11-08T05:23:38.941Z",
   "userStories": [
     {
       "id": "US-001",
@@ -25,14 +25,17 @@
         "pure-function"
       ],
       "dependencies": [],
-      "status": "pending",
-      "passes": false,
+      "status": "passed",
+      "passes": true,
       "attempts": 0,
       "escalations": [],
       "routing": {
         "complexity": "simple",
         "testStrategy": "tdd-simple",
-        "reasoning": "Single pure function appended to one existing source file plus one new describe block in the existing test file; purely additive, no new dependencies or abstractions, and the -0/NaN edge cases are already solved by the sibling `negate` guard."
+        "reasoning": "Single pure function appended to one existing source file plus one new describe block in the existing test file; purely additive, no new dependencies or abstractions, and the -0/NaN edge cases are already solved by the sibling `negate` guard.",
+        "initialComplexity": "simple",
+        "modelTier": "fast",
+        "initialModelTier": "fast"
       },
       "contextFiles": [
         "src/math.ts",
@@ -46,12 +49,11 @@
         "Object.is(abs(-Number.MIN_VALUE), Number.MIN_VALUE) is true",
         "abs(Number.MAX_SAFE_INTEGER) returns Number.MAX_SAFE_INTEGER"
       ],
-      "outOfScope": [
-        "Other math functions.",
-        "Changes to `add` or `negate`.",
-        "New files outside `src/` and `test/`."
-      ],
-      "workdirSource": "defaulted"
+      "workdirSource": "defaulted",
+      "priorErrors": [],
+      "priorFailures": [],
+      "storyPoints": 1,
+      "storyGitRef": "9eacbdb5df10c6fe77cd1dd4916371e48baa61c8"
     }
   ],
   "analysis": "Codebase is a tiny TypeScript library (Bun runtime, strict TS, ESM: package.json:3 sets \"type\": \"module\", tsconfig.json:5 sets strict: true, include: [\"src\", \"test\"]).\n\nKey files:\n- src/math.ts (8 lines) — the only source module. Named exports only, no default export. Contains `add(a, b): number` (src/math.ts:1) and `negate(n): number` (src/math.ts:5). `negate` already solves the exact zero-sign problem abs must solve: it early-returns the literal `0` when `n === 0` (src/math.ts:6) so `negate(0)` is positive zero rather than `-0`. `abs` should mirror that guard.\n- test/math.test.ts (26 lines) — the only test file, one `bun:test` file per module. Imports `{ describe, expect, test } from 'bun:test'` and `{ add, negate } from '../src/math'` (test/math.test.ts:1-2, note the extensionless relative import). Blocks: `describe('add', ...)` and `describe('negate', ...)`. The `negate` block uses the project convention of test names prefixed `AC<n>:` (test/math.test.ts:11,15,19,23) and uses `expect(...).toBe(...)` for value equality plus `expect(Object.is(negate(0), 0)).toBe(true)` (test/math.test.ts:20) to assert canonical positive zero. The new `abs` block must follow the same shape, with test names prefixed `A-AC<n>:`.\n- No barrel/index module: there is no src/index.ts, so nothing re-exports math symbols and no export plumbing is needed. Nothing in the repo imports `negate`/`add` other than the test file, so adding `abs` cannot break a consumer.\n- package.json scripts: test = `bun test`, typecheck = `tsc --noEmit`.\n\nImpact analysis:\n- Additive single-function change. `add` and `negate` bodies must be left untouched (both spec requirement and out-of-scope). Inserting `abs` after `negate` keeps alphabetical/readability order without perturbing existing lines.\n- Test file is modified (import list gains `abs`, new `describe('abs', ...)` block appended). The existing `add`/`negate` blocks stay byte-identical.\n\nRisks / pitfalls:\n- Naive `return n < 0 ? -n : n` yields `-0` for `abs(-0)` because `-0 < 0` is false but the else branch returns the argument `-0` unchanged. Hence the explicit `n === 0` guard returning literal `0` (as `negate` does).\n- A `!n`-style guard would wrongly map `NaN` to a fabricated value and is not needed; `NaN` must pass through so `Number.isNaN(abs(NaN))` is true — `n === 0` is false for `NaN`, so falling through to `n` returns `NaN` naturally.\n- `abs(-Infinity)` must be `Infinity`: `-Infinity < 0` is true, so `-n` gives `Infinity`; do not special-case finiteness.\n- Fractional negatives (`-0.5` -> `0.5`) and `-Number.MIN_VALUE` must not be coerced to `-0`; only the exact `0`/`-0` case is canonicalised.\n- Explicit `: number` return type is required by the spec and by strict mode conventions already used by `add`/`negate`.\n\nMigration path: none needed — purely additive, no consumers, no persistence, no deprecations. Verifiable with `bun test` and `bun run typecheck`.",
