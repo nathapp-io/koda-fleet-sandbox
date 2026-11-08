@@ -30,3 +30,11 @@ Add a `clamp(n, min, max)` function to `src/math.ts`, next to `add` and `negate`
 - Other math functions.
 - Infinity handling.
 - New files outside `src/` and `test/`.
+
+## Flow's calls
+
+### SPEC_REVIEW job cmw77gfui000a07qrz5ulwc5h
+
+- **nan-policy-undecided** (answer): Which NaN policy should clamp(n, min, max) implement: (a) return NaN whenever any argument is NaN, (b) throw a RangeError (and with what message, and does it fire before or after the min > max check), or (c) treat NaN as unbounded and fall through to the ordinary comparisons? Answer: (a) Return NaN whenever n, min or max is NaN. The min > max RangeError check runs first and only on non-NaN bounds (any comparison with NaN is false, so it never throws for NaN). Add unit ACs: clamp(NaN, 0, 10), clamp(5, NaN, 10) and clamp(5, 0, NaN) each return NaN (Number.isNaN).
+- **prd-stale-vs-nan** (answered): prd.json was planned before commit 9d432d9 and still says 'do NOT add NaN or Infinity guards' with 'NaN or Infinity handling' out of scope, contradicting the current spec. Call: After the NaN policy is chosen, regenerate the PRD with nax plan rather than hand-editing it, so the NaN requirement and ACs land in US-001 and the outOfScope entry is dropped.
+- **zero-normalization-ordering** (minor): Requirement 1 ('returns n otherwise') and Requirement 2 ('a zero result is always positive zero') read as peers but disagree for n = -0 inside ordinary bounds; only AC6 disambiguates. Call: Reword Requirement 2 as a final step applied to the value selected by Requirement 1 (e.g. 'the selected result is normalized so that -0 becomes 0'), so it explicitly overrides all three branches.
