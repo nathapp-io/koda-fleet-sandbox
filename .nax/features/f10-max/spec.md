@@ -27,3 +27,10 @@ Add a `max2(a, b)` function to `src/math.ts`, next to `add` and `negate`.
 - Changes to existing exports.
 - New files outside `src/` and `test/`.
 - The `e2e` quality command in `.nax/config.json` (a sandbox gate for the koda flow live check; not part of this feature).
+
+## Flow's calls
+
+### SPEC_REVIEW job cmw7r03wc000a08mfg14b4hia
+
+- **m-ac-numbering** (minor): The `M-AC<n>:` test-name prefix is anchored to nothing explicit, and `nax plan` splits/renumbers ACs (prior feature went 4 spec ACs → 8 story ACs), so the implementer cannot tell whether n is the spec AC number or the story AC number. Call: Reword spec line 14 to say `<n>` is the spec's acceptance-criterion number (1–5), so the naming stays stable however the plan splits AC4/AC5.
+- **neg-zero-equal** (minor): `max2(-0, -0)` is unpinned: the spec pins mixed-sign zeros to +0 but says nothing about equal negative zeros, and two implementations that satisfy all five ACs disagree there (Math.max → -0; a normalise-zeros impl → +0). Call: Pin `max2(-0, -0)` to `-0` (only mixed signs promote to `+0`) in the Requirements and add the matching assertion to AC5, or add it to `## Out of scope`.
