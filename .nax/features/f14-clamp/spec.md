@@ -31,3 +31,10 @@ Add a `clamp(x, lo, hi)` function to `src/math.ts`, built on the existing `min2`
 
 - Changes to `min2` or other existing exports.
 - New files outside `src/` and `test/`.
+
+## Flow's calls
+
+### SPEC_REVIEW job cmw8w5zwt001a08nxrtvn5ahm
+
+- **f14-clamp-signed-zero-lo-eq-0** (minor): The amended signed-zero clause claims clamp(0, lo, -0) is -0 for any lo, but under the mandated Math.max(min2(x, hi), lo) order clamp(0, 0, -0) is +0, since 0 > -0 does not throw and Math.max(-0, 0) is +0. Call: Scope the clause: 'clamp(0, lo, -0) returns -0 for lo < 0; clamp(0, 0, -0) returns +0 (Math.max(-0, 0)); no other zero's sign is pinned,' and drop the claim that both cells are forced under either legal call order.
+- **f14-clamp-existing-min2-wording** (minor): The Goal calls min2 'the existing min2 export' although src/math.ts exports only add and negate at 41011ba, which invites an implementer to create min2 themselves, forbidden by the spec's Out of scope. Call: Reword the Goal to 'build on min2 from f14-min (see Dependencies)' and keep the Dependencies bullet as the hard precondition.
