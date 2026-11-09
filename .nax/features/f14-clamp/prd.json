@@ -1,0 +1,65 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "f14-clamp",
+  "branchName": "feat/f14-clamp",
+  "createdAt": "2026-02-14T00:00:00.000Z",
+  "updatedAt": "2026-11-09T06:57:08.142Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add clamp(x, lo, hi) to src/math.ts on top of min2, with NaN guard and RangeError",
+      "description": "**Goal** — Add a `clamp(x, lo, hi)` function to `src/math.ts`, built on `min2` from `f14-min` (see Dependencies), and cover it with a new `describe('clamp', ...)` block in `test/math.test.ts`.\n\n**Motivation** — `clamp` is the range-limiting primitive this feature adds to the math module; it must reuse the already-merged `min2` for its upper bound rather than duplicating or redefining it.\n\n**Approach** — Requirements, verbatim from the spec:\n- `clamp(x: number, lo: number, hi: number): number` returns `x` limited to the closed range `[lo, hi]`.\n- It calls `min2` for the upper bound (`min2(x, hi)`); the lower bound may use `Math.max`.\n- When `lo > hi`, it throws a `RangeError` whose message contains `lo must not exceed hi`.\n- When any argument is `NaN`, it returns `NaN` (checked before the range check).\n- Exported as a named export from `src/math.ts`, with an explicit return type.\n- `add`, `negate`, `min2` and any other existing export are unchanged.\n- Tests go in `test/math.test.ts`, in a new `describe('clamp', ...)` block whose test names are prefixed `C-AC<n>:`.\n\nImplementation notes (how, not what):\n- `min2` ALREADY EXISTS in `src/math.ts` (src/math.ts:10-12, `return Math.min(a, b)`) because the dependency feature `f14-min` is merged. Import/reuse nothing new — it is in the same module, so just call it. Do NOT create, redefine, move, or edit `min2`; the spec's Out of scope forbids changes to it.\n- The canonical body is a two-step: `if (Number.isNaN(x) || Number.isNaN(lo) || Number.isNaN(hi)) return NaN` first, then `if (lo > hi) throw new RangeError('lo must not exceed hi')`, then `return Math.max(min2(x, hi), lo)`. The NaN guard MUST precede the range check so `clamp(NaN, 10, 0)` returns `NaN` instead of throwing.\n- Keep the function pure and small with no new dependencies; place it in `src/math.ts` alongside `add`/`negate`/`min2` and leave those three untouched.\n- Zero signs are deliberately NOT pinned by this spec. Under the mandated `Math.max(min2(x, hi), lo)` order, `clamp(0, 0, -0)` is `+0` while `clamp(0, -5, -0)` is `-0`; assert zero-valued results with `toBe` (===) only, never with `Object.is`, and do not add a signed-zero test.\n- In the test file, extend the existing import to `import { add, clamp, min2, negate } from '../src/math'`, keep the existing `describe('add')`, `describe('negate')` and `describe('min2')` blocks byte-for-byte untouched, and append the new block at the end. Follow the file's existing naming style: `test('C-AC1: clamp(5, 0, 10) returns 5', ...)`. Use `expect(() => clamp(1, 10, 0)).toThrow(RangeError)` and additionally assert the message with `toThrow('lo must not exceed hi')`; use `Number.isNaN(...)` for the NaN criterion.\n\n**Scope** — In: append `clamp` to `src/math.ts`; append a `describe('clamp', ...)` block to `test/math.test.ts`; extend the test file's import list. Out: any change to `min2`, `add`, `negate` or their tests; any new file or barrel/index module; any signed-zero semantics for `clamp`; creating `min2` (it is already merged from `f14-min`).\n\n**Interface**\n```typescript\nexport function clamp(x: number, lo: number, hi: number): number\n```",
+      "acceptanceCriteria": [
+        "clamp(5, 0, 10) returns 5.",
+        "clamp(-3, 0, 10) returns 0.",
+        "clamp(42, 0, 10) returns 10.",
+        "clamp(4, 4, 4) returns 4.",
+        "When lo > hi, clamp(1, 10, 0) throws a RangeError whose message contains `lo must not exceed hi`.",
+        "Number.isNaN(clamp(NaN, 0, 1)) and Number.isNaN(clamp(0.5, NaN, 1)) are both true.",
+        "add(2, 3) returns 5, negate(5) returns -5, and min2(3, 7) returns 3, unchanged by this change."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "unit"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Purely additive single-file change to src/math.ts plus one appended describe block in the existing test file; no new dependencies, no new abstractions, no cross-module wiring. The dependency (min2 from f14-min) is already merged, and the only subtleties — NaN-before-range-check ordering and reusing min2 rather than redefining it — are handled within this one story."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "suggestedCriteria": [
+        "clamp is callable as a named export with the signature (x: number, lo: number, hi: number) => number, e.g. clamp(5, 0, 10) === 5.",
+        "clamp(0, 0, 10) returns 0 when x equals lo.",
+        "clamp(10, 0, 10) returns 10 when x equals hi.",
+        "clamp(NaN, 10, 0) returns NaN instead of throwing a RangeError, because the NaN check runs before the lo > hi range check.",
+        "clamp(-Infinity, 0, 10) returns 0 and clamp(Infinity, 0, 10) returns 10."
+      ],
+      "outOfScope": [
+        "Changes to `min2` or other existing exports.",
+        "New files outside `src/` and `test/`.",
+        "Creating or redefining `min2` — it is already merged from `f14-min` at src/math.ts:10 and must be reused as-is.",
+        "Pinning the sign of a zero result (`Object.is`-style assertions) — no acceptance criterion specifies zero-sign behaviour for `clamp`.",
+        "Any barrel/index module or new export surface beyond the named `clamp` export."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "CODEBASE STATE (verified on disk at this branch)\n- Tiny dependency-free TypeScript library, Bun runtime, strict tsconfig (target ES2022, module ESNext, moduleResolution bundler, strict: true, include: [\"src\", \"test\"] — tsconfig.json:1-10). Scripts: `bun test` and `bun run typecheck` (tsc --noEmit) — package.json:6-8. Dev-only deps (@types/bun, typescript); no runtime dependencies, so `clamp` must stay dependency-free.\n- Only one source module exists: `src/math.ts` (12 lines), named exports only, explicit return types, no default export, no barrel/index file:\n  - `export function add(a: number, b: number): number` — src/math.ts:1-3\n  - `export function negate(n: number): number` (canonicalises 0 → 0) — src/math.ts:5-8\n  - `export function min2(a: number, b: number): number { return Math.min(a, b) }` — src/math.ts:10-12\n  IMPORTANT: the dependency feature `f14-min` is already merged here, so `min2` exists. It must be reused as-is and must NOT be redefined, moved, or modified.\n- Only one test file exists: `test/math.test.ts` (60 lines), importing `{ add, min2, negate }` from '../src/math' and `{ describe, expect, test }` from 'bun:test'. Existing blocks: `describe('add')` (1 test), `describe('negate')` with AC-prefixed names `AC1:`, `AC2:`, `AC3:`, `AC5:` and an `Object.is(negate(0), 0)` signed-zero assertion (test/math.test.ts:11-25), and `describe('min2')` with names prefixed `N-AC1:` … `N-AC7:` (test/math.test.ts:27-59). The new block must follow the same convention with the spec's `C-AC<n>:` prefix.\n\nWHAT CHANGES / IMPACT\n- Files modified: exactly two — `src/math.ts` (append `clamp`) and `test/math.test.ts` (append a new `describe('clamp', ...)` block). No new files; the spec scopes file creation to `src/` and `test/` only and none is needed.\n- Dependents/importers: nothing in the repo imports from `src/math.ts` except `test/math.test.ts`, and `clamp` is purely additive. Backward-compatibility risk is essentially nil; the only regression risk is rewriting `src/math.ts` wholesale and dropping or altering `add`/`negate`/`min2` (a regression AC guards this), or accidentally editing the existing `describe` blocks in the test file.\n- Ordering/dependency: `f14-min` is already merged (`min2` present at src/math.ts:10), so this feature has no blocking story dependency; it is a single-story, single-pass change.\n\nIMPLEMENTATION DECISIONS (from the spec, plus review calls on the spec)\n- Mandated computation: upper bound via `min2(x, hi)`, lower bound via `Math.max` — i.e. `Math.max(min2(x, hi), lo)`. This propagates NaN naturally, but the explicit NaN early-return must still run BEFORE the `lo > hi` range check so `clamp(NaN, 10, 0)` returns NaN instead of throwing.\n- Error contract: `throw new RangeError('lo must not exceed hi')` (message must contain the substring `lo must not exceed hi`).\n- Signature: `export function clamp(x: number, lo: number, hi: number): number` with an explicit return type, named export only.\n- Zero signs are NOT part of this spec. Do not assert anything about the sign of a zero result: under the mandated `Math.max(min2(x, hi), lo)` order, `clamp(0, 0, -0)` is `+0` (Math.max(-0, 0) === +0) while `clamp(0, -5, -0)` is `-0`; no zero-sign behaviour is pinned by any acceptance criterion, so tests must use `toBe` (===), never `Object.is`, for zero-valued results.\n- `Infinity`/`-Infinity` work for free through `min2`/`Math.max`; no special casing needed.\n- Test-naming convention (spec requirement, not an AC): new tests live in `test/math.test.ts` inside a new `describe('clamp', ...)` block, with each test name prefixed `C-AC<n>:` matching the AC it covers.\n\nRISKS\n- Low. Single small pure function, no concurrency, no IO, no new abstractions. Main failure modes: (a) implementing with ternaries that skip the `min2` call, (b) checking the range before the NaN guard, (c) using `Object.is` on a zero result and pinning an unspecified sign, (d) touching existing exports/tests.",
+  "outOfScope": [
+    "Changes to `min2` or other existing exports.",
+    "New files outside `src/` and `test/`."
+  ],
+  "routingProfile": "koda-job-cmw8wpwva008x08nxh9ghhsri"
+}
