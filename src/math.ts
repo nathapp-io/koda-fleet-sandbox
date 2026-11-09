@@ -6,3 +6,7 @@ export function negate(n: number): number {
   if (n === 0) return 0
   return -n
 }
+
+export function min2(a: number, b: number): number {
+  return Math.min(a, b)
+}
