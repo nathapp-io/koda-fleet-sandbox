@@ -81,7 +81,8 @@ describe('clamp', () => {
     expect(() => clamp(1, 10, 0)).toThrow('lo must not exceed hi')
   })
 
-  test('C-AC6: returns NaN when x or lo is NaN', () => {
+  test('C-AC6: returns NaN before validating bounds when x or lo is NaN', () => {
+    expect(Number.isNaN(clamp(NaN, 10, 0))).toBe(true)
     expect(Number.isNaN(clamp(NaN, 0, 1))).toBe(true)
     expect(Number.isNaN(clamp(0.5, NaN, 1))).toBe(true)
   })
