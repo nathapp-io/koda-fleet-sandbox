@@ -1,0 +1,65 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "f14-min",
+  "branchName": "feat/f14-min",
+  "createdAt": "2026-02-14T00:00:00.000Z",
+  "updatedAt": "2026-11-09T06:44:38.422Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add min2(a, b) to src/math.ts with NaN and signed-zero semantics",
+      "description": "**Goal** — Add a `min2(a, b)` function to `src/math.ts`, next to `add` and `negate`, and cover it with a new `describe('min2', ...)` block in `test/math.test.ts`.\n\n**Motivation** — `min2` is the primitive the upcoming `clamp` feature (`f14-clamp`, a separate spec) builds on, and its signed-zero output is load-bearing for `clamp`, so its exact behaviour must be pinned now.\n\n**Approach** — Requirements, verbatim from the spec:\n- `min2(a: number, b: number): number` returns the smaller of `a` and `b`.\n- When either argument is `NaN`, it returns `NaN`.\n- `min2(0, -0)` and `min2(-0, 0)` both return negative zero (`-0`).\n- Exported as a named export from `src/math.ts`, with an explicit return type.\n- `add`, `negate` and any other existing export are unchanged.\n- Tests go in `test/math.test.ts`, in a new `describe('min2', ...)` block whose test names are prefixed `N-AC<n>:`.\n\nImplementation notes (how, not what):\n- The signed-zero requirement is the only trap. A comparison branch such as `a < b ? a : b` returns `b` for the tie, so `min2(-0, 0)` yields `+0` and fails; `a <= b ? a : b` fails the mirrored case `min2(0, -0)`. A branch-based implementation must special-case the both-zero path (`if (a === 0 && b === 0) return -0`).\n- The canonical, lowest-risk implementation is a single delegation `return Math.min(a, b)`: per the ECMAScript spec `Math.min` returns `-0` when either operand is a zero (`Math.min(0, -0)` and `Math.min(-0, 0)` are both `-0`) and returns `NaN` when any operand is `NaN`, so it satisfies every acceptance criterion. The spec does not mandate the computation, only the results — do not add a spy or `spyOn` test trying to prove `Math.min` is or is not called.\n- Keep `min2` pure and small with no new dependencies; place it in `src/math.ts` alongside the existing functions and leave `add`/`negate` byte-for-byte untouched.\n- In the test file, import `min2` alongside the existing `add, negate` from '../src/math'. Use `bun:test`'s `describe`/`test`/`expect`. Assert negative zero with `expect(Object.is(min2(0, -0), -0)).toBe(true)` and `expect(Object.is(min2(-0, 0), -0)).toBe(true)` (matching the existing `negate` signed-zero precedent in test/math.test.ts:16-18) and assert NaN with `Number.isNaN(...)`, never `toBe(NaN)`.\n- Test names must carry the `N-AC<n>:` prefix, e.g. `test('N-AC1: min2(3, 7) returns 3', ...)`.\n\n**Scope** — In: `src/math.ts` (new `min2` named export with explicit types) and `test/math.test.ts` (new `describe('min2', ...)` block). Out: the `clamp` feature (`f14-clamp`) and any other math function — brand-new distinct story in a different spec; any change, refactor, or re-export of the existing `add` / `negate` exports; creating files outside `src/` and `test/` (no barrel/index file, no new module); no dependency additions.\n\n**Interface** — verbatim from the spec:\n```typescript\nmin2(a: number, b: number): number\n```\nwith an explicit return type and a named export from `src/math.ts`:\n```typescript\nexport function min2(a: number, b: number): number\n```",
+      "acceptanceCriteria": [
+        "min2(3, 7) returns 3.",
+        "min2(7, 3) returns 3.",
+        "min2(-2, -5) returns -5.",
+        "Number.isNaN(min2(NaN, 1)) and Number.isNaN(min2(1, NaN)) are both true.",
+        "Object.is(min2(0, -0), -0) and Object.is(min2(-0, 0), -0) are both true.",
+        "min2 is a named export of src/math.ts callable as min2(a, b) with two number arguments.",
+        "add(2, 3) returns 5 and negate(5) returns -5, unchanged by this change."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "unit"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Single-file additive change to src/math.ts plus one new describe block in the existing test file; no new dependencies, no new abstractions, no cross-module wiring. The signed-zero requirement is a small correctness subtlety handled within the same story."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "suggestedCriteria": [
+        "min2(2, 2) returns 2.",
+        "min2(Infinity, -Infinity) returns -Infinity.",
+        "min2(Infinity, Infinity) returns Infinity.",
+        "Number.isNaN(min2(NaN, NaN)) is true.",
+        "Number.isNaN(min2(NaN, -0)) is true.",
+        "Object.is(min2(-0, -0), -0) is true."
+      ],
+      "outOfScope": [
+        "The `clamp` function and the `f14-clamp` feature — separate spec that builds on `min2`.",
+        "Any modification to the existing `add` and `negate` implementations or their export shape.",
+        "Creating new files under any directory other than `src/` and `test/` (no index/barrel module)."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "CODEBASE STATE\n- Tiny TypeScript library, Bun runtime, strict tsconfig (target ES2022, module ESNext, moduleResolution bundler, strict: true, include: [\"src\", \"test\"] — tsconfig.json:1-10).\n- Only one source module exists: `src/math.ts` (8 lines) exporting two named functions with explicit return types:\n  - `export function add(a: number, b: number): number { return a + b }` (src/math.ts:1-3)\n  - `export function negate(n: number): number { if (n === 0) return 0; return -n }` (src/math.ts:5-8)\n  There is no default export and no barrel/index re-export file anywhere (src/ contains only math.ts) — so `src/math.ts` is the single public surface for this feature and no index plumbing is required.\n- Only one test file exists: `test/math.test.ts` (26 lines), which imports `{ add, negate }` from '../src/math' and uses `describe`/`test`/`expect` from 'bun:test'. Existing blocks: `describe('add')` with one test using `toBe`, and `describe('negate')` with four tests whose names are already AC-prefixed (`AC1:`, `AC2:`, `AC3:`, `AC5:`) and which use `Object.is(...)` for the signed-zero assertion on `negate(0)` (test/math.test.ts:16-18). The new `min2` block must follow that same AC-prefix naming convention, but with the spec's `N-AC<n>:` prefix.\n- Scripts: `bun test` and `bun run typecheck` (tsc --noEmit) — package.json:6-8. Dev-only deps (@types/bun, typescript); no runtime dependencies, so the implementation must stay dependency-free.\n\nWHAT CHANGES / IMPACT\n- Files modified: exactly two — `src/math.ts` (add `min2`) and `test/math.test.ts` (add a `describe('min2', ...)` block). No new files; the spec explicitly scopes any creation to `src/` and `test/` only.\n- Dependents/importers: no module in the repo imports from `src/math.ts` except `test/math.test.ts`. `add` and `negate` are additive-pure and untouched, so backward compatibility risk is essentially nil — the only regression risk is accidentally rewriting the file and dropping or altering an existing export.\n\nKEY TECHNICAL DECISION — SIGNED ZERO (the one real trap)\n- The spec pins `min2(0, -0) === -0` AND `min2(-0, 0) === -0`. Naive comparison logic fails this: `a < b ? a : b` returns `b`, so `min2(-0, 0)` yields `+0`, violating AC5. `a <= b ? a : b` fails the mirrored case (`min2(0, -0)` yields `+0`). Any branch-based implementation must special-case “if either arg is a zero, return `-0`” (e.g. `if (a === 0 && b === 0) return -0`).\n- The low-risk, canonical implementation is a one-liner delegating to `Math.min(a, b)`: the ECMAScript spec makes `Math.min` return `-0` when either operand is a zero (both `Math.min(0, -0)` and `Math.min(-0, 0)` are `-0`), and return `NaN` if any operand is `NaN`. It therefore satisfies all five ACs directly. Either implementation is acceptable provided the AC for signed zero holds in both orders; the spec does not mandate how `min2` is computed.\n- `Math.min` also handles `NaN` propagation and infinities for free, which keeps the function pure, small and dependency-free as the repo conventions demand.\n\nCONVENTIONS TO PRESERVE\n- Named exports only, no default export; explicit parameter and return types (strict `tsc`). Place `min2` in `src/math.ts` alongside `add` and `negate`.\n- Tests use `bun:test` imports and `expect(...).toBe(...)`; use `Object.is` (not `toBe(-0)`, and never `toEqual`) for negative-zero assertions, matching the precedent in the existing `negate` block. For NaN use `Number.isNaN(...)`.\n- Test names in the new block must be prefixed `N-AC<n>:` per the spec.\n\nRISKS\n- Silent signed-zero regression: a “clean-looking” branch implementation passing AC1-AC4 but failing AC5. Mitigation: assert with `Object.is` in both argument orders.\n- `expect(min2(0, -0)).toBe(-0)` would fail in Bun's `toBe` (it uses `Object.is`) — actually `toBe` is `Object.is`-based, but the spec wording asks for `Object.is`; use `expect(Object.is(...)).toBe(true)` to match the spec text exactly.\n- Do not add helper modules or refactor `add`/`negate`.\n\nMIGRATION / SEQUENCING\n- Purely additive; no migration. Single story is sufficient — the whole feature is one function plus one test block. `clamp` (feature `f14-clamp`) will later build on `min2`, so `min2` must be a named export of `src/math.ts` exactly as specified.\n\nNOTE ON FLOW'S CALLS (from SPEC_REVIEW on the sibling `f14-clamp` spec)\n- All three review calls (`f14-clamp-signed-zero`, `f14-clamp-nan-hi`, `f14-clamp-min2-unobservable`) amend the *f14-clamp* spec, not this one. They add nothing to `f14-min`'s requirements and produce no story here. Two consequences worth carrying forward as context only: (1) `min2`'s own signed-zero output is load-bearing for clamp, so it must stay exact; (2) `min2` and `Math.min` are behaviourally identical for numbers, so no `f14-min` test should attempt to distinguish them (no spies).",
+  "outOfScope": [
+    "Other math functions (the `clamp` feature `f14-clamp` is a separate spec that builds on `min2`).",
+    "Changes to existing exports.",
+    "New files outside `src/` and `test/`."
+  ],
+  "routingProfile": "koda-job-cmw8wb52j002508nx00jaough"
+}
