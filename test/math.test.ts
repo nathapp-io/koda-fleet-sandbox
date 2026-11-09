@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { add, min2, negate } from '../src/math'
+import { add, clamp, min2, negate } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
@@ -56,5 +56,33 @@ describe('min2', () => {
   test('N-AC7: existing add and negate results are unchanged', () => {
     expect(add(2, 3)).toBe(5)
     expect(negate(5)).toBe(-5)
+  })
+})
+
+describe('clamp', () => {
+  test('C-AC1: clamp(5, 0, 10) returns 5', () => {
+    expect(clamp(5, 0, 10)).toBe(5)
+  })
+
+  test('C-AC2: clamp(-3, 0, 10) returns 0', () => {
+    expect(clamp(-3, 0, 10)).toBe(0)
+  })
+
+  test('C-AC3: clamp(42, 0, 10) returns 10', () => {
+    expect(clamp(42, 0, 10)).toBe(10)
+  })
+
+  test('C-AC4: clamp(4, 4, 4) returns 4', () => {
+    expect(clamp(4, 4, 4)).toBe(4)
+  })
+
+  test('C-AC5: throws RangeError when lo exceeds hi', () => {
+    expect(() => clamp(1, 10, 0)).toThrow(RangeError)
+    expect(() => clamp(1, 10, 0)).toThrow('lo must not exceed hi')
+  })
+
+  test('C-AC6: returns NaN when x or lo is NaN', () => {
+    expect(Number.isNaN(clamp(NaN, 0, 1))).toBe(true)
+    expect(Number.isNaN(clamp(0.5, NaN, 1))).toBe(true)
   })
 })
