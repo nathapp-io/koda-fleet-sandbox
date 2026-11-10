@@ -10,3 +10,7 @@ export function negate(n: number): number {
 export function min2(a: number, b: number): number {
   return Math.min(a, b)
 }
+
+export function max3(a: number, b: number, c: number): number {
+  return Math.max(a, b, c)
+}
