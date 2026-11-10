@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { add, min2, negate } from '../src/math'
+import { add, min2, min3, negate } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
@@ -56,5 +56,19 @@ describe('min2', () => {
   test('N-AC7: existing add and negate results are unchanged', () => {
     expect(add(2, 3)).toBe(5)
     expect(negate(5)).toBe(-5)
+  })
+})
+
+describe('min3', () => {
+  test('AC1: min3(1, 8, 5) returns 1 — smallest first', () => {
+    expect(min3(1, 8, 5)).toBe(1)
+  })
+
+  test('AC2: min3(8, 5, 1) returns 1 — smallest last', () => {
+    expect(min3(8, 5, 1)).toBe(1)
+  })
+
+  test('AC3: min3(4, 4, 4) returns 4 — all equal', () => {
+    expect(min3(4, 4, 4)).toBe(4)
   })
 })
