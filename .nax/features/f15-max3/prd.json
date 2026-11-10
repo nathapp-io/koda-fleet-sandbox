@@ -1,0 +1,57 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "f15-max3",
+  "branchName": "feat/f15-max3",
+  "createdAt": "2025-06-11T00:00:00.000Z",
+  "updatedAt": "2026-11-10T04:36:21.267Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add max3(a, b, c) to src/math.ts with covering tests",
+      "description": "**Goal** — Add a `max3(a, b, c)` function to `src/math.ts` alongside the existing `add`, `negate` and `min2` exports, and cover it with a new `describe('max3', ...)` block in the existing `test/math.test.ts`.\n\n**Motivation** — As a caller of the math library, I want `max3` so that I can get the largest of three numbers without nesting comparisons at the call site.\n\n**Approach** — Append one new named-export function to the bottom of `src/math.ts`, written in the same style as the existing functions there: `export function` declaration, typed parameters, explicit `number` return type, `Math.max` or plain comparisons at the implementer's discretion (the spec leaves the strategy to the implementer; no new dependencies). Do not modify `add`, `negate` or `min2` in any way. Then, in `test/math.test.ts`: (1) extend the existing destructured import on line 2 (`import { add, min2, negate } from '../src/math'`) so it also brings in `max3` — keep the already-imported names intact; (2) append a new `describe('max3', () => { ... })` block after the existing `describe('min2', ...)` block, containing one `test(...)` per acceptance criterion below, each named with the `M3-AC<n>:` prefix where `<n>` is the acceptance-criterion number (e.g. `test('M3-AC1: max3(9, 2, 5) returns 9', ...)`). This mirrors the existing per-feature prefix convention in the file — `AC<n>:` for `negate` and `N-AC<n>:` for `min2`. Assert with `expect(...).toBe(...)` from `bun:test`, exactly as the existing tests do.\n\n**Scope** — In: `src/math.ts` (one appended exported function), `test/math.test.ts` (import extension plus one new `describe` block). Out: any change to `add`, `negate` or `min2` or their existing tests; any new source or test file; any change outside `src/` and `test/`; any new dependency; NaN or signed-zero semantics (not pinned by this feature).\n\n**Interface**\n```typescript\n// src/math.ts\n/**\n * Returns the largest of the three given numbers.\n */\nexport function max3(a: number, b: number, c: number): number\n\n// existing exports, which must remain unchanged:\nexport function add(a: number, b: number): number\nexport function negate(n: number): number\nexport function min2(a: number, b: number): number\n```\n\n**Test naming contract** — every new test name in the new `describe('max3', ...)` block begins with `M3-AC<n>:` where `<n>` is 1–5, matching the AC numbering in `acceptanceCriteria` below.",
+      "acceptanceCriteria": [
+        "max3(9, 2, 5) returns 9 — largest first.",
+        "max3(2, 5, 9) returns 9 — largest last.",
+        "max3(4, 4, 4) returns 4 — all equal.",
+        "max3(2, 9, 5) returns 9 — largest in the middle.",
+        "max3(-7, -3, -5) returns -3 — all operands negative."
+      ],
+      "tags": [
+        "feature",
+        "library",
+        "typescript"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Purely additive single named export in one existing source file plus one new describe block in an existing test file; no new dependencies, no new abstractions, standard bun:test patterns already established in the repo. Not security-critical."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "suggestedCriteria": [
+        "max3 is a named export of src/math.ts callable with three numbers and assignable to the type (a: number, b: number, c: number) => number.",
+        "add(2, 3) still returns 5, negate(5) still returns -5, and min2(3, 7) still returns 3 after max3 is added."
+      ],
+      "outOfScope": [
+        "NaN and signed-zero semantics (not pinned by this feature).",
+        "Changes to existing exports or new files outside `src/` and `test/`."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "## Codebase shape\n\nMinimal, purely additive TypeScript library. Only two source-of-truth files matter for this feature:\n\n- `src/math.ts` (12 lines) — named exports only: `add(a, b)` (src/math.ts:1), `negate(n)` (src/math.ts:5), `min2(a, b)` (src/math.ts:9). All are small pure functions with explicit `number` params and `number` return types. No default exports anywhere in the repo (matches the AGENTS.md convention and the spec).\n- `test/math.test.ts` (60 lines) — one `describe` block per function: `describe('add')` with a single unprefixed test, `describe('negate')` with tests named `AC1:`, `AC2:`, `AC3:`, `AC5:`, and `describe('min2')` with tests named `N-AC1:` … `N-AC7:`. Imports at test/math.test.ts:1-2 are `import { describe, expect, test } from 'bun:test'` and `import { add, min2, negate } from '../src/math'`.\n\nBuild/config: `package.json` scripts `test: bun test`, `typecheck: tsc --noEmit`; `tsconfig.json` has `strict: true`, `target ES2022`, `types: [\"bun\"]`, `include: [\"src\", \"test\"]`. No test runner config file, no dependencies to add.\n\n## Files to modify\n\n1. `src/math.ts` — append `export function max3(a: number, b: number, c: number): number`. Append only; do not touch `add`, `negate`, `min2` (spec requirement: they are unchanged).\n2. `test/math.test.ts` — append a new `describe('max3', ...)` block at the end of the file, and extend the existing import on line 2 to also import `max3`. Test names must carry the `M3-AC<n>:` prefix, mirroring the existing `AC<n>:` / `N-AC<n>:` per-feature prefix style.\n\nNo new files are created, in `src/` or anywhere else.\n\n## Dependent / affected code\n\n- `test/math.test.ts` is the only importer of `src/math.ts` (`import { add, min2, negate } from '../src/math'` at test/math.test.ts:2). Nothing else in the repo imports the math module, so there is no downstream consumer to update.\n- Existing `min2` tests explicitly assert regression anchors — test/math.test.ts:56-59 (`N-AC7: existing add and negate results are unchanged`) — so any accidental edit to `add`/`negate`/`min2` will surface as a test failure. That is the safety net for the 'existing exports unchanged' requirement.\n\n## Risks\n\n- **Low overall.** Purely additive export in a throwaway repo with no consumers.\n- Editing the existing import line (test/math.test.ts:2) rather than adding a second import statement is a small but real risk: a careless rewrite could drop `min2` or `negate` and break existing tests. Prefer minimally extending the existing destructured import.\n- Naming/style drift: the repo has no linter, so a mixed style (e.g. arrow-function export, default export, missing return type annotation) would only fail review or `tsc --noEmit`, not `bun test`. The story description must pin the signature explicitly.\n- `Math.max` semantics differ from `min2`'s documented NaN/signed-zero behaviour — but the spec explicitly declares NaN and signed-zero semantics out of scope, so the implementation strategy (comparisons vs `Math.max`) is free and must not be over-specified or tested.\n\n## Architecture / implementation decisions\n\n- **Signature is fixed**: `max3(a: number, b: number, c: number): number`, named export, explicit return type annotation, no default export.\n- **Implementation strategy is deliberately unconstrained** by the spec (plain comparisons or `Math.max` are both acceptable). The story must not mandate one.\n- **Test placement is fixed**: new `describe('max3', ...)` block inside the existing `test/math.test.ts`; each new test name prefixed `M3-AC<n>:` where `<n>` is the spec AC number (1–5). One `test(...)` per acceptance criterion keeps the name→AC mapping one-to-one, mirroring the `N-AC1:`…`N-AC7:` convention.\n- Negative numbers and all-equal operands are already covered by the spec ACs (M3-AC3, M3-AC5); no extra edge-case surface is needed.\n\n## Migration path\n\nNone required. Additive export; existing callers of `add`/`negate`/`min2` are untouched and keep working. No version bump, no breaking change.",
+  "outOfScope": [
+    "NaN and signed-zero semantics (not pinned by this feature).",
+    "Changes to existing exports or new files outside `src/` and `test/`."
+  ],
+  "routingProfile": "koda-job-cmwa75r0r006p08ntrucqr9pi"
+}
