@@ -3,7 +3,7 @@
   "feature": "g5-sign",
   "branchName": "feat/g5-sign",
   "createdAt": "2026-11-13T05:58:41.380Z",
-  "updatedAt": "2026-11-13T05:58:41.380Z",
+  "updatedAt": "2026-11-13T06:04:42.896Z",
   "userStories": [
     {
       "id": "US-001",
@@ -23,14 +23,17 @@
         "pure-function"
       ],
       "dependencies": [],
-      "status": "pending",
-      "passes": false,
+      "status": "passed",
+      "passes": true,
       "attempts": 0,
       "escalations": [],
       "routing": {
         "complexity": "simple",
         "testStrategy": "tdd-simple",
-        "reasoning": "Single small pure function added to one existing file plus one new test block in the existing test file; purely additive, no new dependencies or abstractions, one notable edge case (-0 normalisation). No security-sensitive surface, so the security override does not apply."
+        "reasoning": "Single small pure function added to one existing file plus one new test block in the existing test file; purely additive, no new dependencies or abstractions, one notable edge case (-0 normalisation). No security-sensitive surface, so the security override does not apply.",
+        "initialComplexity": "simple",
+        "modelTier": "fast",
+        "initialModelTier": "fast"
       },
       "contextFiles": [
         "src/math.ts",
@@ -46,12 +49,11 @@
         "sign(-0) does not return -0, i.e. Object.is(sign(-0), -0) is false.",
         "Every test inside the new describe('sign', ...) block has a name prefixed with 'N-AC<n>:'."
       ],
-      "outOfScope": [
-        "Other math functions.",
-        "Changes to existing exports.",
-        "New files outside `src/` and `test/`."
-      ],
-      "workdirSource": "defaulted"
+      "workdirSource": "defaulted",
+      "priorErrors": [],
+      "priorFailures": [],
+      "storyPoints": 1,
+      "storyGitRef": "b8e96d028bd2da88d61b2774d04efa33904f209e"
     }
   ],
   "analysis": "Codebase is a tiny throwaway TypeScript library (Bun + strict TS, `type: module`). Only two source files exist: `src/math.ts` (12 lines) and `test/math.test.ts` (60 lines). `src/math.ts:1-12` exports three pure named functions — `add(a, b)`, `negate(n)`, `min2(a, b)` — each with an explicit `: number` return type and no default exports. `test/math.test.ts:1-2` imports `{ add, min2, negate }` from `'../src/math'` and uses `bun:test` (`describe`, `expect`, `test`); the file already contains a per-function `describe` block, and the newest block (`describe('min2', ...)`, `test/math.test.ts:28-60`) establishes the local convention of naming tests with an `N-AC<n>:` prefix plus a short behavioural phrase (e.g. `'N-AC1: min2(3, 7) returns 3'`), which is exactly the naming shape this feature requires for `sign`.\n\nImpact area: purely additive. The only file modified is `src/math.ts` (one new exported function appended after `min2`) and `test/math.test.ts` (one new `describe('sign', ...)` block appended at end of file). No file imports `src/math.ts` other than the test — verified by Glob showing only `src/math.ts` and `test/math.test.ts` as non-`node_modules` TypeScript files — so there is no downstream consumer to break and no migration path is needed. `package.json:6-9` defines `test: bun test` and `typecheck: tsc --noEmit`; `tsconfig.json:5-6` enables `strict` with `types: [\"bun\"]` and includes both `src` and `test`, so an omitted return type or a missing import would fail typecheck.\n\nKey technical decision / risk: do NOT implement `sign` as a thin `Math.sign` wrapper. `Math.sign(-0)` returns `-0` and `Object.is(Math.sign(-0), 0)` is `false`, which directly violates the spec requirement that `sign(-0)` returns positive zero; `Math.sign(NaN)` does correctly return `NaN`. A safe shape is: guard NaN first via `Number.isNaN`, then handle zero with a `-0`-insensitive comparison (`x === 0`, or `x > 0` / `x < 0` branches whose final fallback is `return 0`), which normalises both `0` and `-0` to canonical `+0`. Care is needed so the literal `0` returned is written as plain `0`, not `-0`, and so no branch returns the input directly (returning `x` for zero would leak `-0`). Second risk: touching the existing exports while editing the file — `add`, `negate`, `min2` must stay byte-identical in behaviour (note `negate` already normalises zero at `src/math.ts:6`). Third risk: the test file already has a `describe('min2')` whose tests are prefixed `N-AC`; the new `describe('sign')` block must keep its own `N-AC1..N-AC4` numbering inside its own block (block-scoped numbering, mirroring the existing style) and must not rename, reorder or delete existing tests.",
