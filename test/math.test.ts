@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { add, min2, negate } from '../src/math'
+import { add, min2, negate, sign } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
@@ -56,5 +56,36 @@ describe('min2', () => {
   test('N-AC7: existing add and negate results are unchanged', () => {
     expect(add(2, 3)).toBe(5)
     expect(negate(5)).toBe(-5)
+  })
+})
+
+describe('sign', () => {
+  test('N-AC1: sign(5) returns 1', () => {
+    expect(sign(5)).toBe(1)
+  })
+
+  test('N-AC2: sign(-3) returns -1', () => {
+    expect(sign(-3)).toBe(-1)
+  })
+
+  test('N-AC3: both zero inputs return canonical positive zero', () => {
+    expect(Object.is(sign(0), 0)).toBe(true)
+    expect(Object.is(sign(-0), 0)).toBe(true)
+  })
+
+  test('N-AC4: sign(NaN) returns NaN', () => {
+    expect(Number.isNaN(sign(NaN))).toBe(true)
+  })
+
+  test('N-AC5: is callable as a named export with a number signature', () => {
+    const callable: (x: number) => number = sign
+    expect(callable(5)).toBe(1)
+  })
+
+  test('N-AC6: existing exports remain unchanged', () => {
+    expect(add(2, 3)).toBe(5)
+    expect(negate(5)).toBe(-5)
+    expect(Object.is(negate(0), 0)).toBe(true)
+    expect(min2(3, 7)).toBe(3)
   })
 })
