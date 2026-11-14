@@ -1,0 +1,61 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "live1114-clamp",
+  "branchName": "feat/live1114-clamp",
+  "createdAt": "2026-11-14T09:52:20.127Z",
+  "updatedAt": "2026-11-14T09:52:20.127Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add clamp(x, lo, hi) to src/math.ts with RangeError on inverted bounds",
+      "description": "**Goal** — Add a `clamp(x, lo, hi)` function to `src/math.ts`, next to the existing exports, with a failing-first `describe('clamp', ...)` test block in `test/math.test.ts`.\n\n**Motivation** — The library has `add`, `negate`, `min2`, and `sign`; `clamp` is the next small pure math helper and completes the min/max-style family with bounded-value coercion.\n\n**Approach** — In `src/math.ts`, append a single named export alongside the existing four (`add`, `negate`, `min2`, `sign` must remain byte-identical — do not reorder, rename, or reformat them):\n- Signature must carry an explicit return type: `export function clamp(x: number, lo: number, hi: number): number`.\n- Validate the bounds FIRST, before any clamping comparison, so inverted bounds are never masked: `if (lo > hi) throw new RangeError(...)` (a message such as `clamp: lo must be <= hi` is fine; the tests assert the error type, not the message).\n- Then: return `lo` when `x < lo`; return `hi` when `x > hi`; otherwise return `x`.\n- Pure function, no new dependencies, no default export. Note that `NaN` compares false against both bounds, so a `NaN` `x` falls through to `return x` — this is consistent with the existing `min2`/`sign` NaN behaviour and needs no special-casing.\n\nIn `test/math.test.ts`, extend the existing `bun:test` import line and the `../src/math` import line to include `clamp`, then add a new `describe('clamp', ...)` block (append it after the existing blocks; do not modify the `add`, `negate`, `min2`, or `sign` describes). Every test name inside the new block must be prefixed `N-AC<n>:`, matching the convention used by the `min2` and `sign` blocks, e.g. `test('N-AC1: clamp(5, 0, 10) returns 5', ...)`. Use `expect(() => clamp(1, 10, 0)).toThrow(RangeError)` for the error-path criterion. Cover all four acceptance criteria — one test per criterion, `N-AC1` through `N-AC4`.\n\n**Interface**\n```typescript\nexport function clamp(x: number, lo: number, hi: number): number\n```\n\n**Scope** — In: `src/math.ts` gets the `clamp` export; `test/math.test.ts` gets the new `describe('clamp', ...)` block and the updated import lines. Out: any other math function, any change to `add`/`negate`/`min2`/`sign`, any new file, any new dependency.",
+      "acceptanceCriteria": [
+        "[unit] clamp(5, 0, 10) returns 5.",
+        "[unit] clamp(-1, 0, 10) returns 0.",
+        "[unit] clamp(11, 0, 10) returns 10.",
+        "[unit] clamp(1, 10, 0) throws a RangeError."
+      ],
+      "tags": [
+        "feature",
+        "math",
+        "unit-test"
+      ],
+      "dependencies": [],
+      "status": "pending",
+      "passes": false,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "simple",
+        "testStrategy": "tdd-simple",
+        "reasoning": "Purely additive single-function export in one existing source file plus mirrored tests in one existing test file; standard patterns, no new abstractions, no dependencies, and existing tests already guard against regressions in the other exports."
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "suggestedCriteria": [
+        "clamp is callable as a named export assignable to the type (x: number, lo: number, hi: number) => number, returning 5 for clamp(5, 0, 10).",
+        "clamp(0, 0, 10) returns 0 and clamp(10, 0, 10) returns 10, so the bounds are inclusive.",
+        "clamp(5, 5, 5) returns 5 when lo equals hi.",
+        "clamp(2.5, 0, 10) returns 2.5, preserving the original value when x is strictly inside the bounds.",
+        "Existing exports remain unchanged: add(2, 3) returns 5, negate(5) returns -5, min2(3, 7) returns 3, and sign(-3) returns -1 after clamp is added."
+      ],
+      "outOfScope": [
+        "Other math functions.",
+        "Changes to existing exports.",
+        "New files outside `src/` and `test/`."
+      ],
+      "workdirSource": "defaulted"
+    }
+  ],
+  "analysis": "Repo is a tiny Bun + TypeScript (strict) library. Layout: `src/math.ts` (19 lines, four named exports: `add`, `negate`, `min2`, `sign`, all with explicit `: number` return types) and `test/math.test.ts` (91 lines, one `describe` block per function, `bun:test` imports as `import { describe, expect, test } from 'bun:test'`, subject imported via `import { add, min2, negate, sign } from '../src/math'`). Config: `package.json:6-9` scripts `test` = `bun test` and `typecheck` = `tsc --noEmit`; `tsconfig.json` targets ES2022, `moduleResolution: bundler`, `strict: true`, `include: [\"src\", \"test\"]`.\n\nChange surface is exactly two existing files — `src/math.ts` (append a `clamp` export, leave `add`/`negate`/`min2`/`sign` byte-identical) and `test/math.test.ts` (add a fifth `describe('clamp', ...)` block plus `clamp` in the named import on line 2). Nothing else in the repo imports `src/math.ts` (no other source modules, no index barrel), so blast radius of adding an export is zero; the only backward-compatibility risk is accidentally editing or reordering existing exports, which existing tests in `test/math.test.ts` already guard (e.g. `sign` describe's `N-AC6: existing exports remain unchanged` at test/math.test.ts:84-89, and `min2` describe's `N-AC7` at test/math.test.ts:67-70).\n\nConventions to mirror: named exports only (no default export), explicit return types on every exported function, small pure functions, no new dependencies, `bun:test` `describe`/`test`/`expect`, test names prefixed `N-AC<n>:` inside a `describe` named after the function. Error-path convention: use `expect(() => ...).toThrow(RangeError)` (no existing throw-based export yet, so this is the first; `RangeError` is a built-in and needs no import).\n\nImplementation decision for `clamp`: validate the bounds first — `if (lo > hi) throw new RangeError(...)` — then `if (x < lo) return lo`, `if (x > hi) return hi`, `return x`. Checking bounds before clamping ensures acceptance criterion 4 (`clamp(1, 10, 0)` throws) is not masked by the comparisons. NaN inputs compare false against both bounds under `<`/`>`, so NaN propagates through the final `return x`, which is consistent with `min2`/`sign` NaN behaviour. No migration path is needed: purely additive change, no consumers, no versioning or API surface constraints beyond the file's own convention.\n\nAcceptance criteria 1-4 come straight from the spec and map to a new `describe('clamp', ...)` block with tests `N-AC1`..`N-AC4`; requirements about the explicit return type and unchanged existing exports are covered by suggested criteria.",
+  "outOfScope": [
+    "Other math functions.",
+    "Changes to existing exports.",
+    "New files outside `src/` and `test/`."
+  ],
+  "routingProfile": "koda-job-cmwg87p66000708o8s3az4ibj"
+}
