@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { add, min2, negate, sign } from '../src/math'
+import { add, clamp, min2, negate, sign } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
@@ -87,5 +87,23 @@ describe('sign', () => {
     expect(negate(5)).toBe(-5)
     expect(Object.is(negate(0), 0)).toBe(true)
     expect(min2(3, 7)).toBe(3)
+  })
+})
+
+describe('clamp', () => {
+  test('N-AC1: clamp(5, 0, 10) returns 5', () => {
+    expect(clamp(5, 0, 10)).toBe(5)
+  })
+
+  test('N-AC2: clamp(-1, 0, 10) returns 0', () => {
+    expect(clamp(-1, 0, 10)).toBe(0)
+  })
+
+  test('N-AC3: clamp(11, 0, 10) returns 10', () => {
+    expect(clamp(11, 0, 10)).toBe(10)
+  })
+
+  test('N-AC4: inverted bounds throw a RangeError', () => {
+    expect(() => clamp(1, 10, 0)).toThrow(RangeError)
   })
 })
