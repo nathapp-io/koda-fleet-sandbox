@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { add, min2, negate, sign } from '../src/math'
+import { add, clamp, min2, negate, sign } from '../src/math'
 
 describe('add', () => {
   test('adds two numbers', () => {
@@ -56,6 +56,30 @@ describe('min2', () => {
   test('N-AC7: existing add and negate results are unchanged', () => {
     expect(add(2, 3)).toBe(5)
     expect(negate(5)).toBe(-5)
+  })
+})
+
+describe('clamp', () => {
+  test('N-AC1: returns x when it is within the bounds', () => {
+    expect(clamp(5, 0, 10)).toBe(5)
+  })
+
+  test('N-AC2: returns the nearest bound when x is out of range', () => {
+    expect(clamp(-1, 0, 10)).toBe(0)
+    expect(clamp(11, 0, 10)).toBe(10)
+  })
+
+  test('N-AC3: reversed bounds throw the exact RangeError', () => {
+    expect(() => clamp(1, 10, 0)).toThrow(RangeError)
+    expect(() => clamp(1, 10, 0)).toThrow(
+      new RangeError('clamp: lo must be <= hi'),
+    )
+  })
+
+  test('N-AC4: returns NaN when any argument is NaN', () => {
+    expect(Number.isNaN(clamp(NaN, 0, 1))).toBe(true)
+    expect(Number.isNaN(clamp(0, NaN, 1))).toBe(true)
+    expect(Number.isNaN(clamp(0, 0, NaN))).toBe(true)
   })
 })
 
