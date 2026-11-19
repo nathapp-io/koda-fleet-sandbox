@@ -1,0 +1,60 @@
+{
+  "project": "koda-fleet-sandbox",
+  "feature": "h477-clamp",
+  "branchName": "feat/h477-clamp",
+  "createdAt": "2026-11-19T03:05:57.979Z",
+  "updatedAt": "2026-11-19T03:08:47.857Z",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add the clamp math export",
+      "description": "**Goal** — Add a `clamp(x, lo, hi)` function to `src/math.ts`, next to the existing exports.\n\n**Motivation** — Give callers a reusable way to bound a number without changing existing math helpers.\n\n**Approach** — When any argument is `NaN`, return `NaN`. Otherwise, when `lo > hi`, throw a `RangeError` with the exact message `clamp: lo must be <= hi`. For ordered bounds, return `lo` when `x < lo`, `hi` when `x > hi`, and `x` otherwise. Export `clamp` by name with an explicit return type. Write the failing tests first in a new `describe('clamp', ...)` block in `test/math.test.ts`, using the `N-AC<n>:` prefix for every new test name. Import `clamp` alongside the existing helpers. Assert both the exception type and exact message for reversed bounds, and exercise the NaN requirement in each argument position. Leave the existing exports and their tests intact.\n\n**Scope** — In: Add the named export in `src/math.ts` and its unit tests in `test/math.test.ts`. Out: Other math functions. Changes to existing exports. New files outside `src/` and `test/`.\n\n**Interface**\n```typescript\nclamp(x: number, lo: number, hi: number): number\n```",
+      "acceptanceCriteria": [
+        "When `clamp(5, 0, 10)` is called, then it returns `5`.",
+        "When `clamp(-1, 0, 10)` is called, then it returns `0`.",
+        "When `clamp(11, 0, 10)` is called, then it returns `10`.",
+        "When `clamp(1, 10, 0)` is called, then it throws a `RangeError` with the exact message `clamp: lo must be <= hi`.",
+        "When `Number.isNaN(clamp(NaN, 0, 1))` is evaluated, then it returns `true`."
+      ],
+      "tags": [
+        "feature",
+        "typescript",
+        "math"
+      ],
+      "dependencies": [],
+      "status": "passed",
+      "passes": true,
+      "attempts": 0,
+      "escalations": [],
+      "routing": {
+        "complexity": "medium",
+        "testStrategy": "tdd-simple",
+        "reasoning": "The story changes two existing files, and the small additive helper has deterministic return values and errors that can be tested first in the existing Bun suite without separate sessions.",
+        "initialComplexity": "medium",
+        "modelTier": "fast",
+        "initialModelTier": "fast"
+      },
+      "contextFiles": [
+        "src/math.ts",
+        "test/math.test.ts"
+      ],
+      "suggestedCriteria": [
+        "`Number.isNaN(clamp(NaN, 10, 0))` returns `true`.",
+        "`clamp(7, 5, 5)` returns `5`.",
+        "`Object.is(clamp(-0, 0, 1), -0)` returns `true`."
+      ],
+      "workdirSource": "defaulted",
+      "priorErrors": [],
+      "priorFailures": [],
+      "storyPoints": 1,
+      "storyGitRef": "686988c8e9a7eff63a0e1bc692712b9ff629ffd4"
+    }
+  ],
+  "analysis": "This is an additive change to an existing private TypeScript library (`package.json:2–4`), not a greenfield feature. Modify only `src/math.ts` and `test/math.test.ts`. The math module defines `add`, `negate`, `min2`, and `sign` as named functions with explicit `number` return types (`src/math.ts:1`, `src/math.ts:5`, `src/math.ts:10`, `src/math.ts:14`); `sign` already uses `Number.isNaN` (`src/math.ts:15`). The only in-repository consumer found is the test suite’s direct named import from `../src/math` (`test/math.test.ts:2`); no barrel or production caller needs updating. Existing `bun:test` suites cover all four exports (`test/math.test.ts:1`, `test/math.test.ts:4`, `test/math.test.ts:10`, `test/math.test.ts:28`, `test/math.test.ts:62`), including NaN and signed-zero behavior for existing helpers. The `min2` and `sign` blocks establish the `N-AC<n>:` naming convention (`test/math.test.ts:29`, `test/math.test.ts:63`). Add the clamp tests there first, then append the implementation. The existing Bun test and TypeScript check scripts need no changes (`package.json:5–8`); strict TypeScript covers both source and test directories (`tsconfig.json:6`, `tsconfig.json:10`). Check NaN before validating bound order so the unconditional NaN rule holds even if x is NaN and the numeric bounds are reversed. Use strict comparisons and return the selected argument directly: when x equals a bound, returning x preserves its sign if it is zero. No new dependencies, configuration, files, or migration are needed. Existing callers keep the same imports and behavior; new callers opt in by importing clamp from the same module.",
+  "outOfScope": [
+    "Other math functions.",
+    "Changes to existing exports.",
+    "New files outside `src/` and `test/`."
+  ],
+  "routingProfile": "native-ds-m3-flash"
+}
