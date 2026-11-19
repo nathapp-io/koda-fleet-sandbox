@@ -70,6 +70,7 @@ describe('clamp', () => {
   })
 
   test('N-AC3: reversed bounds throw the exact RangeError', () => {
+    expect(() => clamp(1, 10, 0)).toThrow(RangeError)
     expect(() => clamp(1, 10, 0)).toThrow(
       new RangeError('clamp: lo must be <= hi'),
     )
